@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учет производства деталей</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 { text-align: center; color: #2c3e50; }
+        h2 { color: #2c3e50; margin-top: 30px; }
+        .controls {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .controls label { font-weight: 600; }
+        .controls input, .controls select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .controls button {
+            padding: 8px 16px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .controls button:hover { background: #219653; }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .table-wrapper {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            padding: 10px;
+        }
+        table { border-collapse: collapse; min-width: 100%; }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            text-align: center;
+            font-size: 13px;
+            min-width: 70px;
+        }
+        th {
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th.summary-col { background: #2c3e50; min-width: 110px; }
+        th.name-col {
+            background: #2c3e50;
+            min-width: 300px;
+            position: sticky;
+            left: 0;
+            z-index: 11;
+        }
+        td.name-cell {
+            position: sticky;
+            left: 0;
+            background: #f8f9fa;
+            font-weight: 600;
+            text-align: left;
+            z-index: 5;
+            min-width: 300px;
+            padding: 8px 12px;
+        }
+        td.summary-cell { background: #e8f4f8; font-weight: bold; }
+        td input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-size: 13px;
+            padding: 4px;
+        }
+        td input:focus { background: #fffacd; outline: 2px solid #3498db; }
+        td input.plan-input { font-weight: bold; color: #2c3e50; }
+        tr:nth-child(even) td { background: #fafafa; }
+        tr:nth-child(even) td.name-cell { background: #f0f0f0; }
+        .weekend { background: #ffe4e1 !important; }
+        .today-col { background: #90ee90 !important; }
+        .completed-row { background: #e8f5e9 !important; }
+        .completed-row td.name-cell { background: #c8e6c9 !important; }
+        .overplan-row { background: #fff3cd !important; }
+        .overplan-row td.name-cell { background: #ffe69c !important; }
+        .delete-row-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .delete-row-btn:hover { background: #c0392b; }
+        .trim-btn {
+            background: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .trim-btn:hover { background: #d35400; }
+        .add-part-form { display: flex; gap: 10px; align-items: center; }
+        .add-part-form input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .stats {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .stat-item {
+            background: #e8f4f8;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-item h3 { margin: 0; font-size: 13px; color: #555; }
+        .stat-item p { margin: 5px 0 0; font-size: 24px; font-weight: bold; color: #2980b9; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .badge-done { background: #27ae60; color: white; }
+        .badge-progress { background: #f39c12; color: white; }
+        .badge-future { background: #95a5a6; color: white; }
+        .badge-overplan { background: #e67e22; color: white; }
+        .overplan-table th { background: #e67e22; }
+        .overplan-table th.name-col { background: #d35400; min-width: 300px; }
+
+        /* Модальное окно пароля */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            min-width: 350px;
+            text-align: center;
+        }
+        .modal h3 { margin: 0 0 20px 0; color: #2c3e50; }
+        .modal input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+        }
+        .modal input[type="password"]:focus { outline: none; border-color: #3498db; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; }
+        .modal-buttons button {
+            padding: 10px 20px; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 14px; font-weight: bold;
+        }
+        .modal-btn-confirm { background: #27ae60; color: white; }
+        .modal-btn-confirm:hover { background: #219653; }
+        .modal-btn-cancel { background: #95a5a6; color: white; }
+        .modal-btn-cancel:hover { background: #7f8c8d; }
+        .modal-error { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>📋 Учет производства деталей</h1>
+
+    <div class="stats">
+        <div class="stat-item">
+            <h3>План (активных деталей)</h3>
+            <p id="statMonthPlan">0</p>
+        </div>
+        <div class="stat-item">
+            <h3>Изготовлено в этом месяце</h3>
+            <p id="statMonthMade">0</p>
+        </div>
+        <div class="stat-item">
+            <h3>Осталось по плану</h3>
+            <p id="statMonthLeft">0</p>
+        </div>
+        <div class="stat-item">
+            <h3>Изготовлено сегодня</h3>
+            <p id="statToday">0</p>
+        </div>
+        <div class="stat-item">
+            <h3>Активных деталей</h3>
+            <p id="statActive">0</p>
+        </div>
+        <div class="stat-item">
+            <h3>Сверх плана в этом месяце</h3>
+            <p id="statMonthOverplan" style="color: #e67e22;">0</p>
+        </div>
+        <div class="stat-item">
+            <h3>Выбранный период</h3>
+            <p id="statPeriod" style="font-size:18px;">—</p>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div>
+            <label>Год: </label>
+            <select id="yearPicker"></select>
+        </div>
+        <div>
+            <label>Месяц: </label>
+            <select id="monthPicker"></select>
+        </div>
+        <label class="checkbox-label">
+            <input type="checkbox" id="showCompleted">
+            Показать все (включая скрытые)
+        </label>
+        <div class="add-part-form">
+            <input type="text" id="newPartName" placeholder="Название детали">
+            <input type="number" id="newPartPlan" placeholder="План (шт)" min="0" value="0">
+            <button onclick="addPart()">+ Добавить деталь</button>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="mainTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <h2>📊 Детали, изготовленные сверх плана</h2>
+    <div class="table-wrapper">
+        <table class="overplan-table" id="overplanTable">
+            <thead>
+                <tr>
+                    <th class="name-col">Деталь</th>
+                    <th>План</th>
+                    <th>Факт (всего)</th>
+                    <th>Сверх плана</th>
+                    <th>Дата ввода в таблицу</th>
+                    <th>Дата завершения</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="overplanBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Модальное окно для пароля -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal">
+            <h3>🔒 Введите пароль для удаления</h3>
+            <p id="modalPartName" style="color: #555; margin-bottom: 15px;"></p>
+            <input type="password" id="passwordInput" placeholder="••••••" maxlength="10">
+            <div class="modal-buttons">
+                <button class="modal-btn-confirm" onclick="confirmDelete()">Удалить</button>
+                <button class="modal-btn-cancel" onclick="closeModal()">Отмена</button>
+            </div>
+            <div class="modal-error" id="modalError">❌ Неверный пароль!</div>
+        </div>
+    </div>
+
+    <script>
+        let parts = JSON.parse(localStorage.getItem('parts')) || [];
+        let dailyData = JSON.parse(localStorage.getItem('dailyData')) || {};
+
+        const now = new Date();
+        let currentYear = now.getFullYear();
+        let currentMonth = now.getMonth() + 1;
+
+        const yearPicker = document.getElementById('yearPicker');
+        const monthPicker = document.getElementById('monthPicker');
+        const showCompletedCheckbox = document.getElementById('showCompleted');
+        const passwordModal = document.getElementById('passwordModal');
+        const passwordInput = document.getElementById('passwordInput');
+        const modalPartName = document.getElementById('modalPartName');
+        const modalError = document.getElementById('modalError');
+
+        let pendingDeleteId = null;
+
+        const monthNames = [
+            'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+            'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+        ];
+
+        function initPickers() {
+            yearPicker.innerHTML = '';
+            for (let y = 2020; y <= 2050; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                if (y === currentYear) opt.selected = true;
+                yearPicker.appendChild(opt);
+            }
+            monthPicker.innerHTML = '';
+            for (let m = 1; m <= 12; m++) {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = monthNames[m - 1];
+                if (m === currentMonth) opt.selected = true;
+                monthPicker.appendChild(opt);
+            }
+        }
+
+        yearPicker.addEventListener('change', (e) => { currentYear = parseInt(e.target.value); render(); });
+        monthPicker.addEventListener('change', (e) => { currentMonth = parseInt(e.target.value); render(); });
+        showCompletedCheckbox.addEventListener('change', render);
+
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') confirmDelete();
+        });
+
+        function getDaysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
+        function getMonthStr(year, month) { return `${year}-${String(month).padStart(2, '0')}`; }
+        function getDateStr(day) { return `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`; }
+        function formatDateShort(dateStr) { const p = dateStr.split('-'); return `${p[2]}.${p[1]}`; }
+        function formatDateFull(dateStr) { if (!dateStr) return '—'; const p = dateStr.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
+        function getTodayStr() { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; }
+
+        function saveData() {
+            localStorage.setItem('parts', JSON.stringify(parts));
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+        }
+
+        function addPart() {
+            const name = document.getElementById('newPartName').value.trim();
+            const plan = parseInt(document.getElementById('newPartPlan').value) || 0;
+            if (!name) { alert('Введите название детали'); return; }
+            parts.push({ id: Date.now(), name: name, plan: plan, createdAt: getTodayStr() });
+            document.getElementById('newPartName').value = '';
+            document.getElementById('newPartPlan').value = '0';
+            saveData();
+            render();
+        }
+
+        function requestDeletePart(id) {
+            const part = parts.find(p => p.id === id);
+            if (!part) return;
+            pendingDeleteId = id;
+            modalPartName.textContent = `Деталь: "${part.name}"`;
+            passwordInput.value = '';
+            modalError.style.display = 'none';
+            passwordModal.classList.add('active');
+            setTimeout(() => passwordInput.focus(), 100);
+        }
+
+        function confirmDelete() {
+            const password = passwordInput.value;
+            if (password === "652586") {
+                parts = parts.filter(p => p.id !== pendingDeleteId);
+                for (let date in dailyData) {
+                    if (dailyData[date][pendingDeleteId]) delete dailyData[date][pendingDeleteId];
+                }
+                saveData();
+                closeModal();
+                render();
+            } else {
+                modalError.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        function closeModal() {
+            passwordModal.classList.remove('active');
+            pendingDeleteId = null;
+        }
+
+        passwordModal.addEventListener('click', (e) => {
+            if (e.target === passwordModal) closeModal();
+        });
+
+        function removeOverplan(partId) {
+            const part = parts.find(p => p.id === partId);
+            if (!part) return;
+            const totalMade = getTotalMade(partId);
+            let overPlan = totalMade - part.plan;
+            if (overPlan <= 0) return;
+
+            if (!confirm(`У детали "${part.name}" изготовлено на ${overPlan} шт. больше плана.\n\nНажать ОК, чтобы убрать излишек (данные за последние дни будут уменьшены).`)) {
+                return;
+            }
+
+            let dates = Object.keys(dailyData).filter(d => dailyData[d][partId] > 0);
+            dates.sort((a, b) => b.localeCompare(a));
+
+            for (let date of dates) {
+                if (overPlan <= 0) break;
+                let qty = dailyData[date][partId];
+                if (qty <= overPlan) {
+                    overPlan -= qty;
+                    delete dailyData[date][partId];
+                } else {
+                    dailyData[date][partId] -= overPlan;
+                    overPlan = 0;
+                }
+            }
+            saveData();
+            render();
+        }
+
+        function updatePlan(id, value) {
+            const part = parts.find(p => p.id === id);
+            if (part) { part.plan = parseInt(value) || 0; saveData(); render(); }
+        }
+
+        function updateDaily(partId, dateStr, value) {
+            const qty = parseInt(value) || 0;
+            if (!dailyData[dateStr]) dailyData[dateStr] = {};
+            if (qty === 0) { if (dailyData[dateStr][partId]) delete dailyData[dateStr][partId]; } 
+            else { dailyData[dateStr][partId] = qty; }
+            saveData();
+            render();
+        }
+
+        function getTotalMade(partId) {
+            let total = 0;
+            for (let date in dailyData) { if (dailyData[date][partId]) total += dailyData[date][partId]; }
+            return total;
+        }
+
+        function getMadeInMonth(partId, monthStr) {
+            let total = 0;
+            for (let date in dailyData) { if (date.startsWith(monthStr) && dailyData[date][partId]) total += dailyData[date][partId]; }
+            return total;
+        }
+
+        function getLastActiveDate(partId) {
+            let lastDate = null;
+            for (let date in dailyData) {
+                if (dailyData[date][partId] && dailyData[date][partId] > 0) {
+                    if (!lastDate || date > lastDate) lastDate = date;
+                }
+            }
+            return lastDate;
+        }
+
+        function getLastActiveMonth(partId) {
+            const lastDate = getLastActiveDate(partId);
+            return lastDate ? lastDate.slice(0, 7) : null;
+        }
+
+        function getPreviousMonthStr(year, month) {
+            if (month === 1) return `${year - 1}-12`;
+            return `${year}-${String(month - 1).padStart(2, '0')}`;
+        }
+
+        function render() {
+            const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+            const today = getTodayStr();
+            const currentMonthStr = getMonthStr(currentYear, currentMonth);
+            const prevMonthStr = getPreviousMonthStr(currentYear, currentMonth);
+            const showCompleted = showCompletedCheckbox.checked;
+
+            document.getElementById('statPeriod').textContent = `${monthNames[currentMonth - 1]} ${currentYear}`;
+
+            const visibleParts = [];
+
+            parts.forEach(part => {
+                const totalMade = getTotalMade(part.id);
+                const isCompleted = part.plan > 0 && totalMade >= part.plan;
+                const createdAt = part.createdAt || currentMonthStr;
+                const lastActiveMonth = getLastActiveMonth(part.id);
+
+                const isCreated = currentMonthStr >= createdAt.slice(0, 7);
+                const isWithinActiveRange = !isCompleted || (lastActiveMonth && currentMonthStr <= lastActiveMonth);
+                const shouldBeVisible = isCreated && isWithinActiveRange;
+
+                if (showCompleted || shouldBeVisible) {
+                    visibleParts.push({ part, totalMade, isCompleted, createdAt, lastActiveMonth });
+                }
+            });
+
+            const thead = document.getElementById('tableHead');
+            let headHTML = '<tr>';
+            headHTML += '<th class="name-col">Деталь</th>';
+            headHTML += '<th class="summary-col">Общее кол-во<br>по проекту</th>';
+            headHTML += '<th class="summary-col">Изготовлено<br>в прошлом месяце</th>';
+            headHTML += '<th class="summary-col">Осталось<br>изготовить</th>';
+            headHTML += '<th class="summary-col">Дата ввода<br>в таблицу</th>';
+            headHTML += '<th class="summary-col">Дата<br>завершения</th>';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = getDateStr(d);
+                const dayOfWeek = new Date(dateStr).getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isToday = (dateStr === today);
+                let cls = '';
+                if (isToday) cls = 'today-col';
+                else if (isWeekend) cls = 'weekend';
+                headHTML += `<th class="${cls}">${formatDateShort(dateStr)}</th>`;
+            }
+            headHTML += '<th>Действия</th></tr>';
+            thead.innerHTML = headHTML;
+
+            const tbody = document.getElementById('tableBody');
+            let bodyHTML = '';
+            let activeCount = 0;
+            let monthPlan = 0;
+            let monthMade = 0;
+            let monthRemaining = 0;
+            let monthOverplan = 0;
+
+            visibleParts.forEach(({ part, totalMade, isCompleted, createdAt, lastActiveMonth }) => {
+                const madePrevMonth = getMadeInMonth(part.id, prevMonthStr);
+                const madeThisMonth = getMadeInMonth(part.id, currentMonthStr);
+                
+                // Исправленная логика остатка
+                const left = Math.max(0, part.plan - totalMade);
+
+                // Исправленная логика сверх плана за месяц
+                const madeBeforeMonth = totalMade - madeThisMonth;
+                const overPlanBefore = Math.max(0, madeBeforeMonth - part.plan);
+                const overPlanAfter = Math.max(0, totalMade - part.plan);
+                const monthOver = overPlanAfter - overPlanBefore;
+
+                if (!isCompleted) activeCount++;
+                monthPlan += part.plan;
+                monthMade += madeThisMonth;
+                monthRemaining += left;
+                if (monthOver > 0) monthOverplan += monthOver;
+
+                const completedAt = isCompleted ? getLastActiveDate(part.id) : null;
+
+                const rowClass = isCompleted ? 'completed-row' : '';
+                let badge = '';
+                if (isCompleted) badge = '<span class="badge badge-done">✓ Готово</span>';
+                else if (totalMade > 0) badge = `<span class="badge badge-progress">${totalMade}/${part.plan}</span>`;
+                if (overPlanAfter > 0) badge += `<span class="badge badge-overplan">+${overPlanAfter} сверх</span>`;
+
+                const isFuture = currentMonthStr < createdAt.slice(0, 7);
+                if (isFuture) badge += '<span class="badge badge-future">ещё не начата</span>';
+
+                bodyHTML += `<tr class="${rowClass}">`;
+                bodyHTML += `<td class="name-cell">${part.name}${badge}</td>`;
+                bodyHTML += `<td class="summary-cell"><input type="number" class="plan-input" value="${part.plan}" min="0" onchange="updatePlan(${part.id}, this.value)"></td>`;
+                bodyHTML += `<td class="summary-cell" title="Месяц: ${prevMonthStr}">${madePrevMonth}</td>`;
+                bodyHTML += `<td class="summary-cell" style="color: ${left > 0 ? '#e74c3c' : '#27ae60'}">${left}</td>`;
+                bodyHTML += `<td class="summary-cell">${formatDateFull(createdAt)}</td>`;
+                bodyHTML += `<td class="summary-cell">${completedAt ? formatDateFull(completedAt) : '—'}</td>`;
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = getDateStr(d);
+                    const dayOfWeek = new Date(dateStr).getDay();
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const isToday = (dateStr === today);
+                    const qty = dailyData[dateStr] && dailyData[dateStr][part.id] ? dailyData[dateStr][part.id] : '';
+                    let cls = '';
+                    if (isToday) cls = 'today-col';
+                    else if (isWeekend) cls = 'weekend';
+                    const disabled = isFuture ? 'disabled style="opacity:0.4;"' : '';
+                    bodyHTML += `<td class="${cls}"><input type="number" value="${qty}" min="0" ${disabled} onchange="updateDaily(${part.id}, '${dateStr}', this.value)"></td>`;
+                }
+                bodyHTML += `<td><button class="delete-row-btn" onclick="requestDeletePart(${part.id})">✕</button></td>`;
+                bodyHTML += '</tr>';
+            });
+
+            if (visibleParts.length === 0) {
+                const msg = showCompleted ? 'Нет ни одной детали. Добавьте первую выше.' : 'В этом месяце нет активных деталей.';
+                bodyHTML = `<tr><td colspan="${6 + daysInMonth + 1}" style="padding: 30px; color: #999;">${msg}</td></tr>`;
+            }
+            tbody.innerHTML = bodyHTML;
+
+            const overplanBody = document.getElementById('overplanBody');
+            let overplanHTML = '';
+            const overplanParts = parts.filter(p => getTotalMade(p.id) > p.plan);
+
+            if (overplanParts.length === 0) {
+                overplanHTML = `<tr><td colspan="7" style="padding: 20px; color: #999;">Нет деталей, изготовленных сверх плана</td></tr>`;
+            } else {
+                overplanParts.forEach(part => {
+                    const totalMade = getTotalMade(part.id);
+                    const overPlan = totalMade - part.plan;
+                    const isCompleted = totalMade >= part.plan;
+                    const completedAt = isCompleted ? getLastActiveDate(part.id) : null;
+                    
+                    overplanHTML += `<tr class="overplan-row">`;
+                    overplanHTML += `<td class="name-cell">${part.name}</td>`;
+                    overplanHTML += `<td>${part.plan}</td>`;
+                    overplanHTML += `<td>${totalMade}</td>`;
+                    overplanHTML += `<td style="color: #e67e22; font-weight: bold;">+${overPlan}</td>`;
+                    overplanHTML += `<td>${formatDateFull(part.createdAt)}</td>`;
+                    overplanHTML += `<td>${completedAt ? formatDateFull(completedAt) : '—'}</td>`;
+                    overplanHTML += `<td><button class="trim-btn" onclick="removeOverplan(${part.id})">✂ Убрать излишек</button></td>`;
+                    overplanHTML += `</tr>`;
+                });
+            }
+            overplanBody.innerHTML = overplanHTML;
+
+            let todayMadeCount = 0;
+            parts.forEach(p => {
+                if (dailyData[today] && dailyData[today][p.id]) todayMadeCount += dailyData[today][p.id];
+            });
+
+            document.getElementById('statMonthPlan').textContent = monthPlan;
+            document.getElementById('statMonthMade').textContent = monthMade;
+            document.getElementById('statMonthLeft').textContent = monthRemaining;
+            document.getElementById('statToday').textContent = todayMadeCount;
+            document.getElementById('statActive').textContent = activeCount;
+            document.getElementById('statMonthOverplan').textContent = monthOverplan;
+        }
+
+        initPickers();
+        render();
+    </script>
+</body>
+</html>

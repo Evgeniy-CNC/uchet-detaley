@@ -18,7 +18,7 @@
         h1 { text-align: center; color: #2c3e50; }
         h2 { color: #2c3e50; margin-top: 30px; }
 
-        /* Убираем стрелочки у number input во всех браузерах */
+        /* Убираем стрелочки у number input */
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -559,9 +559,6 @@
     let currentMonth = new Date().getMonth() + 1;
     let pendingDeleteId = null;
 
-    const mobileSaveQueue = new Map();
-    let mobileInputDebounce = null;
-
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
     async function doLogin() {
@@ -888,66 +885,32 @@
         await loadData();
     }
 
-    // Мобильное сохранение с очередью
-    function applyMobileChange(partId, dateStr, newQty) {
-        if (!dailyData[dateStr]) dailyData[dateStr] = {};
-        dailyData[dateStr][partId] = newQty;
+    // Мобильное сохранение при потере фокуса (onchange)
+    async function mobileSave(partId, dateStr, value) {
+        const qty = parseInt(value) || 0;
         
-        const input = document.getElementById(`mobile-input-${partId}`);
-        if (input) input.value = newQty;
-        
+        // Показываем визуальную обратную связь
         const card = document.getElementById(`mobile-part-${partId}`);
         if (card) {
             card.classList.add('saving');
             card.classList.remove('saved');
         }
         
-        const savePromise = (mobileSaveQueue.get(partId) || Promise.resolve())
-            .catch(() => {})
-            .then(() => saveDailyToDB(partId, dateStr, newQty))
-            .then(() => {
-                if (card) {
-                    card.classList.remove('saving');
-                    card.classList.add('saved');
-                    setTimeout(() => card.classList.remove('saved'), 600);
-                }
-                updateMobileBadges();
-            })
-            .catch(err => {
-                console.error('Save error for part', partId, err);
-                if (card) card.classList.remove('saving');
-            });
-        
-        mobileSaveQueue.set(partId, savePromise);
-    }
-
-    function debouncedMobileInput(partId, dateStr, value) {
-        clearTimeout(mobileInputDebounce);
-        const qty = parseInt(value) || 0;
-        mobileInputDebounce = setTimeout(() => {
-            applyMobileChange(partId, dateStr, qty);
-        }, 700);
-    }
-
-    function updateMobileBadges() {
-        parts.forEach(part => {
-            const card = document.getElementById(`mobile-part-${part.id}`);
-            if (!card) return;
-            const totalMade = getTotalMade(part.id);
-            const nameDiv = card.querySelector('.mobile-part-name');
-            if (!nameDiv) return;
-            const oldBadges = nameDiv.querySelectorAll('.badge');
-            oldBadges.forEach(b => b.remove());
-            if (part.plan > 0) {
-                let badgeHTML = '';
-                if (totalMade >= part.plan) {
-                    badgeHTML = '<span class="badge badge-done" style="margin-left: 8px;">✓ Готово</span>';
-                } else if (totalMade > 0) {
-                    badgeHTML = `<span class="badge badge-progress" style="margin-left: 8px;">${totalMade}/${part.plan}</span>`;
-                }
-                if (badgeHTML) nameDiv.insertAdjacentHTML('beforeend', badgeHTML);
+        try {
+            await saveDailyToDB(partId, dateStr, qty);
+            // Обновляем локальные данные
+            if (!dailyData[dateStr]) dailyData[dateStr] = {};
+            dailyData[dateStr][partId] = qty;
+            
+            if (card) {
+                card.classList.remove('saving');
+                card.classList.add('saved');
+                setTimeout(() => card.classList.remove('saved'), 600);
             }
-        });
+        } catch (err) {
+            console.error('Save error for part', partId, err);
+            if (card) card.classList.remove('saving');
+        }
     }
 
     function getTotalMade(partId) {
@@ -1117,7 +1080,7 @@
             bodyHTML += `<td class="name-cell" ${canEditName}>${displayName}${badge}</td>`;
             
             const planDisabled = (currentRole !== 'admin') ? 'disabled' : '';
-            bodyHTML += `<td class="summary-cell"><input type="number" inputmode="decimal" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onfocus="this.select()"></td>`;
+            bodyHTML += `<td class="summary-cell"><input type="number" inputmode="decimal" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onfocus="this.select()" onclick="this.select()"></td>`;
             
             if (currentRole !== 'operator') {
                 bodyHTML += `<td class="summary-cell">${madePrevMonth}</td>`;
@@ -1142,7 +1105,7 @@
                 const disabled = !canEdit ? 'disabled' : '';
                 const onchange = canEdit ? `onchange="updateDaily(${part.id}, '${dateStr}', this.value)"` : '';
                 
-                bodyHTML += `<td class="${cls}"><input type="number" inputmode="decimal" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} onfocus="this.select()"></td>`;
+                bodyHTML += `<td class="${cls}"><input type="number" inputmode="decimal" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} onfocus="this.select()" onclick="this.select()"></td>`;
             }
             if (currentRole === 'admin') {
                 bodyHTML += `<td><button class="delete-row-btn" onclick="requestDeletePart(${part.id})">✕</button></td>`;
@@ -1249,7 +1212,7 @@
                         <input type="number" inputmode="numeric" pattern="[0-9]*" 
                                id="mobile-input-${part.id}"
                                value="${qty}" min="0" 
-                               oninput="debouncedMobileInput(${part.id}, '${today}', this.value)"
+                               onchange="mobileSave(${part.id}, '${today}', this.value)"
                                onfocus="this.select()">
                     </div>
                 </div>

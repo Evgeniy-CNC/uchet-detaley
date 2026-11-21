@@ -34,11 +34,7 @@
             width: 100%;
             max-width: 400px;
         }
-        .login-box h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #2c3e50;
-        }
+        .login-box h2 { text-align: center; margin-bottom: 30px; color: #2c3e50; }
         .login-box input {
             width: 100%;
             padding: 12px;
@@ -60,12 +56,7 @@
             font-weight: bold;
         }
         .login-box button:hover { background: #5568d3; }
-        .login-error {
-            color: #e74c3c;
-            text-align: center;
-            margin-top: 10px;
-            display: none;
-        }
+        .login-error { color: #e74c3c; text-align: center; margin-top: 10px; display: none; }
 
         #mainApp { display: none; }
         .top-bar {
@@ -131,12 +122,7 @@
         }
         .controls button:hover { background: #219653; }
 
-        .tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn {
             padding: 10px 20px;
             background: #bdc3c7;
@@ -286,8 +272,6 @@
             font-size: 12px;
             color: white;
         }
-        .btn-edit { background: #3498db; }
-        .btn-delete { background: #e74c3c; }
 
         .modal-overlay {
             display: none;
@@ -318,14 +302,6 @@
             margin-bottom: 10px;
         }
         .modal input:focus { outline: none; border-color: #3498db; }
-        .modal select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
         .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
         .modal-buttons button {
             padding: 10px 20px; border: none; border-radius: 6px;
@@ -334,7 +310,6 @@
         .modal-btn-confirm { background: #27ae60; color: white; }
         .modal-btn-cancel { background: #95a5a6; color: white; }
         .modal-error { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
-        .modal-success { color: #27ae60; font-size: 14px; margin-top: 10px; display: none; }
 
         .audit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .audit-table th, .audit-table td {
@@ -345,104 +320,99 @@
         .audit-table th { background: #34495e; color: white; }
         .audit-table tr:nth-child(even) { background: #f9f9f9; }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-            font-size: 18px;
-        }
+        .loading { text-align: center; padding: 40px; color: #7f8c8d; font-size: 18px; }
 
-        tr.blank-row td {
-            border-bottom: 3px solid #34495e !important;
-        }
-        tr.blank-row td.name-cell {
-            border-bottom: 3px solid #34495e !important;
-        }
-        tr.main-row td {
-            border-bottom: 1px solid #ddd;
-        }
+        /* Разделение строк: заготовка/основная */
+        tr.blank-row td { border-bottom: 3px solid #34495e !important; }
+        tr.blank-row td.name-cell { border-bottom: 3px solid #34495e !important; }
+        tr.main-row td { border-bottom: 1px solid #ddd; }
 
-        .blank-name {
+        /* "Заготовка для" — жирный курсив */
+        .blank-prefix {
             font-style: italic !important;
             font-weight: bold !important;
             color: #555 !important;
         }
 
-        /* Мобильный режим */
+        /* ===== МОБИЛЬНЫЙ РЕЖИМ ===== */
         #mobileView { display: none; }
+        #desktopTable { display: block; }
+
         @media (max-width: 768px) {
-            .operator-only-desktop { display: none !important; }
-            .operator-mobile-show { display: block !important; }
+            body { padding: 10px; }
+            h1 { font-size: 20px; }
+            .stat-item p { font-size: 18px; }
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-item { padding: 8px; }
+            .stat-item h3 { font-size: 11px; }
             
-            #mobileView .mobile-part-card {
-                background: white;
-                border-radius: 8px;
-                padding: 12px;
-                margin-bottom: 10px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                border-left: 4px solid #3498db;
-            }
-            #mobileView .mobile-part-card.blank-card {
-                border-left-color: #95a5a6;
-                background: #f8f9fa;
-            }
-            #mobileView .mobile-part-name {
-                font-weight: 600;
-                font-size: 14px;
-                margin-bottom: 8px;
-                color: #2c3e50;
-            }
-            #mobileView .mobile-part-name.blank-name {
-                font-style: italic;
-                font-weight: bold;
-                color: #555;
-            }
-            #mobileView .mobile-input-row {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-            #mobileView .mobile-input-row input {
-                flex: 1;
-                padding: 12px;
-                font-size: 18px;
-                border: 2px solid #ddd;
-                border-radius: 6px;
-                text-align: center;
-            }
-            #mobileView .mobile-input-row input:focus {
-                border-color: #3498db;
-                outline: none;
-            }
-            #mobileView .mobile-btn {
-                padding: 12px 16px;
-                font-size: 18px;
-                font-weight: bold;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                min-width: 50px;
-            }
-            #mobileView .btn-minus { background: #e74c3c; color: white; }
-            #mobileView .btn-plus { background: #27ae60; color: white; }
-            #mobileView .mobile-header {
-                background: white;
-                padding: 15px;
-                border-radius: 8px;
-                margin-bottom: 15px;
-                text-align: center;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-            #mobileView .mobile-header h3 {
-                margin: 0;
-                color: #2c3e50;
-            }
-            #mobileView .mobile-header p {
-                margin: 5px 0 0;
-                color: #7f8c8d;
-                font-size: 14px;
-            }
+            /* Оператор на мобильном: скрываем таблицу, показываем мобильный вид */
+            body.operator-mobile #desktopTable { display: none !important; }
+            body.operator-mobile #mobileView { display: block !important; }
+            body.operator-mobile #operatorControls { display: none !important; }
         }
+
+        #mobileView .mobile-header {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #mobileView .mobile-header h3 { margin: 0; color: #2c3e50; }
+        #mobileView .mobile-header p { margin: 5px 0 0; color: #7f8c8d; font-size: 14px; }
+
+        #mobileView .mobile-part-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+        #mobileView .mobile-part-card.blank-card {
+            border-left-color: #95a5a6;
+            background: #f8f9fa;
+        }
+        #mobileView .mobile-part-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        #mobileView .mobile-input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #mobileView .mobile-input-row input {
+            flex: 1;
+            padding: 12px;
+            font-size: 20px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+        #mobileView .mobile-input-row input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        #mobileView .mobile-btn {
+            padding: 14px 18px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            min-width: 55px;
+            color: white;
+        }
+        #mobileView .btn-minus { background: #e74c3c; }
+        #mobileView .btn-minus:active { background: #c0392b; }
+        #mobileView .btn-plus { background: #27ae60; }
+        #mobileView .btn-plus:active { background: #219653; }
     </style>
 </head>
 <body>
@@ -470,9 +440,9 @@
 
     <div class="tabs">
         <button class="tab-btn active" onclick="showTab('production')">📊 Производство</button>
-        <button class="tab-btn" onclick="showTab('overplan')" id="tabOverplan">📈 Сверх плана</button>
+        <button class="tab-btn" onclick="showTab('overplan')">📈 Сверх плана</button>
         <button class="tab-btn" onclick="showTab('users')" id="tabUsers" style="display:none;">👥 Пользователи</button>
-        <button class="tab-btn" onclick="showTab('audit')" id="tabAudit">📜 История</button>
+        <button class="tab-btn" onclick="showTab('audit')">📜 История</button>
     </div>
 
     <div id="tab-production" class="tab-content active">
@@ -486,14 +456,8 @@
         </div>
 
         <div class="controls" id="adminControls" style="display:none;">
-            <div>
-                <label>Год: </label>
-                <select id="yearPicker"></select>
-            </div>
-            <div>
-                <label>Месяц: </label>
-                <select id="monthPicker"></select>
-            </div>
+            <div><label>Год: </label><select id="yearPicker"></select></div>
+            <div><label>Месяц: </label><select id="monthPicker"></select></div>
             <div class="add-part-form">
                 <input type="text" id="newPartName" placeholder="Название детали">
                 <input type="number" id="newPartPlan" placeholder="План (шт)" min="0" value="0">
@@ -502,20 +466,19 @@
         </div>
 
         <div class="controls" id="operatorControls">
-            <div>
-                <label>Текущий период: </label>
-                <strong id="currentPeriodLabel">—</strong>
-            </div>
+            <div><label>Текущий период: </label><strong id="currentPeriodLabel">—</strong></div>
         </div>
 
-        <div class="table-wrapper operator-only-desktop">
+        <!-- Десктопная таблица -->
+        <div id="desktopTable" class="table-wrapper">
             <table id="mainTable">
                 <thead id="tableHead"></thead>
                 <tbody id="tableBody"><tr><td colspan="10" class="loading">Загрузка данных...</td></tr></tbody>
             </table>
         </div>
 
-        <div id="mobileView" class="operator-mobile-show">
+        <!-- Мобильный вид (только для операторов) -->
+        <div id="mobileView">
             <div class="mobile-header">
                 <h3>📱 Сменное задание</h3>
                 <p id="mobileDateLabel">—</p>
@@ -552,13 +515,7 @@
         <div class="table-wrapper" style="margin-top: 15px;">
             <table class="users-table">
                 <thead>
-                    <tr>
-                        <th>Email</th>
-                        <th>ФИО</th>
-                        <th>Роль</th>
-                        <th>Создан</th>
-                        <th>Действия</th>
-                    </tr>
+                    <tr><th>Email</th><th>ФИО</th><th>Роль</th><th>Создан</th><th>Действия</th></tr>
                 </thead>
                 <tbody id="usersBody"></tbody>
             </table>
@@ -571,13 +528,8 @@
             <table class="audit-table">
                 <thead>
                     <tr>
-                        <th>Дата/Время</th>
-                        <th>Пользователь</th>
-                        <th>Действие</th>
-                        <th>Таблица</th>
-                        <th>ID записи</th>
-                        <th>Старое значение</th>
-                        <th>Новое значение</th>
+                        <th>Дата/Время</th><th>Пользователь</th><th>Действие</th>
+                        <th>Таблица</th><th>ID записи</th><th>Старое значение</th><th>Новое значение</th>
                     </tr>
                 </thead>
                 <tbody id="auditBody"></tbody>
@@ -596,20 +548,6 @@
             <button class="modal-btn-cancel" onclick="closeModal('deleteModal')">Отмена</button>
         </div>
         <div class="modal-error" id="deleteModalError">❌ Неверный пароль!</div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="resetPasswordModal">
-    <div class="modal">
-        <h3>🔑 Сброс пароля</h3>
-        <p id="resetPasswordEmail" style="color: #555; margin-bottom: 15px;"></p>
-        <input type="password" id="newPasswordInput" placeholder="Новый пароль (мин. 6 символов)">
-        <div class="modal-buttons">
-            <button class="modal-btn-confirm" onclick="resetUserPassword()">Сохранить</button>
-            <button class="modal-btn-cancel" onclick="closeModal('resetPasswordModal')">Отмена</button>
-        </div>
-        <div class="modal-error" id="resetPasswordError"></div>
-        <div class="modal-success" id="resetPasswordSuccess">✅ Пароль изменён!</div>
     </div>
 </div>
 
@@ -657,6 +595,7 @@
         await supabase.auth.signOut();
         currentUser = null;
         currentRole = null;
+        document.body.classList.remove('operator-mobile');
         document.getElementById('mainApp').style.display = 'none';
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('loginEmail').value = '';
@@ -702,6 +641,13 @@
             document.getElementById('operatorControls').style.display = 'none';
         }
 
+        // Включаем мобильный режим для операторов
+        if (currentRole === 'operator' && window.innerWidth <= 768) {
+            document.body.classList.add('operator-mobile');
+        } else {
+            document.body.classList.remove('operator-mobile');
+        }
+
         initPickers();
         loadData();
     }
@@ -716,7 +662,6 @@
 
         const mainParts = allParts.filter(p => !p.name.startsWith('Заготовка для '));
         const blankParts = allParts.filter(p => p.name.startsWith('Заготовка для '));
-
         mainParts.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 
         const sortedParts = [];
@@ -724,22 +669,14 @@
             sortedParts.push(main);
             const blankName = `Заготовка для ${main.name}`;
             const blank = blankParts.find(b => b.name === blankName);
-            if (blank) {
-                sortedParts.push(blank);
-            }
+            if (blank) sortedParts.push(blank);
         });
-
         blankParts.forEach(blank => {
-            if (!sortedParts.find(p => p.id === blank.id)) {
-                sortedParts.push(blank);
-            }
+            if (!sortedParts.find(p => p.id === blank.id)) sortedParts.push(blank);
         });
-
         parts = sortedParts;
 
-        const { data: prodData, error: prodError } = await supabase
-            .from('daily_production')
-            .select('*');
+        const { data: prodData, error: prodError } = await supabase.from('daily_production').select('*');
         if (prodError) { console.error(prodError); return; }
 
         dailyData = {};
@@ -755,13 +692,6 @@
         renderMobile();
     }
 
-    async function savePartToDB(part) {
-        const { error } = await supabase.from('parts').upsert(part);
-        if (error) { alert('Ошибка сохранения: ' + error.message); return false; }
-        await logAudit('insert_or_update', 'parts', part.id, null, part);
-        return true;
-    }
-
     async function deletePartFromDB(partId) {
         const part = parts.find(p => p.id === partId);
         const partName = part ? part.name : '';
@@ -769,17 +699,14 @@
         if (partName && !partName.startsWith('Заготовка для ')) {
             const blankName = `Заготовка для ${partName}`;
             const blankPart = parts.find(p => p.name === blankName);
-            
             if (blankPart) {
                 await supabase.from('parts').delete().eq('id', blankPart.id);
                 await supabase.from('daily_production').delete().eq('part_id', blankPart.id);
                 await logAudit('delete', 'parts', blankPart.id, {name: blankName}, null);
             }
-        }
-        else if (partName && partName.startsWith('Заготовка для ')) {
+        } else if (partName && partName.startsWith('Заготовка для ')) {
             const mainName = partName.replace('Заготовка для ', '');
             const mainPart = parts.find(p => p.name === mainName);
-            
             if (mainPart) {
                 await supabase.from('parts').delete().eq('id', mainPart.id);
                 await supabase.from('daily_production').delete().eq('part_id', mainPart.id);
@@ -789,7 +716,6 @@
 
         const { error } = await supabase.from('parts').delete().eq('id', partId);
         if (error) { alert('Ошибка удаления: ' + error.message); return false; }
-        
         await supabase.from('daily_production').delete().eq('part_id', partId);
         await logAudit('delete', 'parts', partId, {id: partId}, null);
         return true;
@@ -838,12 +764,10 @@
         if (!name) { alert('Введите название детали'); return; }
 
         const now = new Date().toISOString();
-
         const { data: part1, error: err1 } = await supabase
             .from('parts')
             .insert({ name: name, plan: plan, created_at: now })
             .select().single();
-            
         if (err1) { alert('Ошибка: ' + err1.message); return; }
         await logAudit('insert', 'parts', part1.id, null, part1);
 
@@ -852,7 +776,6 @@
             .from('parts')
             .insert({ name: blankName, plan: plan, created_at: now })
             .select().single();
-            
         if (err2) { console.error('Ошибка создания заготовки:', err2); } 
         else { await logAudit('insert', 'parts', part2.id, null, part2); }
 
@@ -873,14 +796,11 @@
     async function editPartName(partId, cell) {
         const part = parts.find(p => p.id === partId);
         if (!part) return;
-        
         const currentName = part.name;
-        
         cell.innerHTML = `<input type="text" value="${currentName.replace(/"/g, '&quot;')}" 
             style="width: 100%; padding: 4px; border: 2px solid #3498db; border-radius: 4px; font-size: 13px; font-weight: 600;"
             onblur="savePartName(${partId}, this)" 
             onkeypress="if(event.key==='Enter') this.blur()">`;
-        
         const input = cell.querySelector('input');
         input.focus();
         input.select();
@@ -888,37 +808,22 @@
 
     async function savePartName(partId, input) {
         const newName = input.value.trim();
-        if (!newName) {
-            alert('Название не может быть пустым');
-            await loadData();
-            return;
-        }
-        
+        if (!newName) { alert('Название не может быть пустым'); await loadData(); return; }
         const part = parts.find(p => p.id === partId);
         const oldName = part ? part.name : '';
-        
-        if (newName === oldName) {
-            await loadData();
-            return;
-        }
+        if (newName === oldName) { await loadData(); return; }
         
         const { error } = await supabase.from('parts').update({name: newName}).eq('id', partId);
-        if (error) {
-            alert('Ошибка сохранения: ' + error.message);
-            await loadData();
-            return;
-        }
+        if (error) { alert('Ошибка сохранения: ' + error.message); await loadData(); return; }
         
         if (!oldName.startsWith('Заготовка для ')) {
             const oldBlankName = `Заготовка для ${oldName}`;
             const newBlankName = `Заготовка для ${newName}`;
             const blankPart = parts.find(p => p.name === oldBlankName);
-            
             if (blankPart) {
                 await supabase.from('parts').update({name: newBlankName}).eq('id', blankPart.id);
             }
         }
-
         await logAudit('update_name', 'parts', partId, {name: oldName}, {name: newName});
         await loadData();
     }
@@ -937,30 +842,24 @@
     async function confirmDeletePart() {
         const password = document.getElementById('deletePasswordInput').value;
         const errorEl = document.getElementById('deleteModalError');
-        
         if (!password) {
             errorEl.textContent = '❌ Введите пароль!';
             errorEl.style.display = 'block';
             return;
         }
-        
         if (currentRole !== 'admin') {
             errorEl.textContent = '❌ Только администратор может удалять!';
             errorEl.style.display = 'block';
             return;
         }
-        
         const { error } = await supabase.auth.signInWithPassword({ 
-            email: currentUser.email, 
-            password: password 
+            email: currentUser.email, password: password 
         });
-        
         if (error) {
             errorEl.textContent = '❌ Неверный пароль!';
             errorEl.style.display = 'block';
             return;
         }
-        
         await deletePartFromDB(pendingDeleteId);
         closeModal('deleteModal');
         await loadData();
@@ -972,22 +871,14 @@
         const totalMade = getTotalMade(partId);
         let overPlan = totalMade - part.plan;
         if (overPlan <= 0) return;
-
         if (!confirm(`У детали "${part.name}" изготовлено на ${overPlan} шт. больше плана. Убрать излишек?`)) return;
-
         let dates = Object.keys(dailyData).filter(d => dailyData[d][partId] > 0);
         dates.sort((a, b) => b.localeCompare(a));
-
         for (let date of dates) {
             if (overPlan <= 0) break;
             let qty = dailyData[date][partId];
-            if (qty <= overPlan) {
-                overPlan -= qty;
-                qty = 0;
-            } else {
-                qty -= overPlan;
-                overPlan = 0;
-            }
+            if (qty <= overPlan) { overPlan -= qty; qty = 0; }
+            else { qty -= overPlan; overPlan = 0; }
             await saveDailyToDB(partId, date, qty);
         }
         await loadData();
@@ -1071,6 +962,15 @@
         }
         yearPicker.onchange = (e) => { currentYear = parseInt(e.target.value); render(); };
         monthPicker.onchange = (e) => { currentMonth = parseInt(e.target.value); render(); };
+    }
+
+    // Форматирование названия: "Заготовка для" — жирный курсив, остальное обычным
+    function formatPartName(name) {
+        if (name.startsWith('Заготовка для ')) {
+            const rest = name.substring('Заготовка для '.length);
+            return `<span class="blank-prefix">Заготовка для</span> ${rest}`;
+        }
+        return name;
     }
 
     function render() {
@@ -1161,9 +1061,7 @@
             bodyHTML += `<tr class="${combinedRowClass}">`;
             
             const canEditName = currentRole === 'admin' ? `ondblclick="editPartName(${part.id}, this)" title="Двойной клик для редактирования"` : '';
-            const displayName = isBlank 
-                ? `<span class="blank-name">${part.name}</span>` 
-                : part.name;
+            const displayName = formatPartName(part.name);
             bodyHTML += `<td class="name-cell" ${canEditName}>${displayName}${badge}</td>`;
             
             const planDisabled = (currentRole !== 'admin') ? 'disabled' : '';
@@ -1219,7 +1117,6 @@
             }
         }
         document.getElementById('statToday').textContent = todayTotal;
-        
         document.getElementById('statActive').textContent = activeCount;
         document.getElementById('statMonthOverplan').textContent = monthOverplan;
     }
@@ -1238,7 +1135,7 @@
                 const isCompleted = totalMade >= part.plan;
                 const completedAt = isCompleted ? getLastActiveDate(part.id) : null;
                 overplanHTML += `<tr class="overplan-row">`;
-                overplanHTML += `<td class="name-cell">${part.name}</td>`;
+                overplanHTML += `<td class="name-cell">${formatPartName(part.name)}</td>`;
                 overplanHTML += `<td>${part.plan}</td>`;
                 overplanHTML += `<td>${totalMade}</td>`;
                 overplanHTML += `<td style="color: #e67e22; font-weight: bold;">+${overPlan}</td>`;
@@ -1256,15 +1153,11 @@
         const isMobile = window.innerWidth <= 768;
         const isOperator = currentRole === 'operator';
         
-        const mobileView = document.getElementById('mobileView');
-        const mainTableWrapper = document.querySelector('.operator-only-desktop');
-        
+        // Управление видимостью через класс на body
         if (isMobile && isOperator) {
-            mobileView.style.display = 'block';
-            if (mainTableWrapper) mainTableWrapper.style.display = 'none';
+            document.body.classList.add('operator-mobile');
         } else {
-            mobileView.style.display = 'none';
-            if (mainTableWrapper) mainTableWrapper.style.display = '';
+            document.body.classList.remove('operator-mobile');
         }
         
         if (!isMobile || !isOperator) return;
@@ -1286,11 +1179,11 @@
             const qty = dailyData[today] && dailyData[today][part.id] ? dailyData[today][part.id] : 0;
             const isBlank = part.name.startsWith('Заготовка для ');
             const cardClass = isBlank ? 'mobile-part-card blank-card' : 'mobile-part-card';
-            const nameClass = isBlank ? 'mobile-part-name blank-name' : 'mobile-part-name';
+            const displayName = formatPartName(part.name);
             
             html += `
                 <div class="${cardClass}">
-                    <div class="${nameClass}">${part.name}</div>
+                    <div class="mobile-part-name">${displayName}</div>
                     <div class="mobile-input-row">
                         <button class="mobile-btn btn-minus" onclick="mobileAdjust(${part.id}, -1)">−1</button>
                         <input type="number" inputmode="decimal" pattern="[0-9]*" 
@@ -1330,21 +1223,6 @@
         tbody.innerHTML = html || '<tr><td colspan="5">Нет пользователей</td></tr>';
     }
 
-    let resetPasswordTargetEmail = null;
-    function openResetPassword(email) {
-        resetPasswordTargetEmail = email;
-        document.getElementById('resetPasswordEmail').textContent = `Пользователь: ${email}`;
-        document.getElementById('newPasswordInput').value = '';
-        document.getElementById('resetPasswordError').style.display = 'none';
-        document.getElementById('resetPasswordSuccess').style.display = 'none';
-        document.getElementById('resetPasswordModal').classList.add('active');
-    }
-
-    async function resetUserPassword() {
-        alert('Сброс пароля через интерфейс отключён. Используйте SQL Editor в Supabase.');
-        closeModal('resetPasswordModal');
-    }
-
     async function renderAudit() {
         const { data, error } = await supabase
             .from('audit_log')
@@ -1369,10 +1247,7 @@
             'update_quantity': '✏️ Изменение количества',
             'update_plan': '📊 Изменение плана',
             'update_name': '✍️ Переименование',
-            'insert_or_update': '💾 Сохранение',
-            'create_user': '👤 Создание пользователя',
-            'delete_user': '👤 Удаление пользователя',
-            'reset_password': '🔑 Сброс пароля'
+            'insert_or_update': '💾 Сохранение'
         };
         
         const tableLabels = {
@@ -1382,41 +1257,27 @@
             'audit_log': 'Журнал'
         };
         
-        const formatValue = (val, tableName, recordId) => {
+        const formatValue = (val, tableName) => {
             if (!val) return '—';
             if (typeof val === 'object') {
                 const parts = [];
-                
-                if (val.name) {
-                    if (tableName === 'parts' || tableName === 'daily_production') {
-                        parts.push(`📦 ${val.name}`);
-                    } else {
-                        parts.push(`Имя: ${val.name}`);
-                    }
-                }
-                
-                if (val.plan !== undefined) {
-                    parts.push(`📋 План: ${val.plan} шт.`);
-                }
-                
+                if (val.name) parts.push(`📦 ${val.name}`);
+                if (val.plan !== undefined) parts.push(`📋 План: ${val.plan} шт.`);
                 if (val.quantity !== undefined && val.date) {
                     const dateParts = val.date.split('-');
-                    const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
-                    parts.push(`📅 ${formattedDate}: ${val.quantity} шт.`);
+                    parts.push(`📅 ${dateParts[2]}.${dateParts[1]}.${dateParts[0]}: ${val.quantity} шт.`);
                 } else if (val.quantity !== undefined) {
                     parts.push(`Количество: ${val.quantity} шт.`);
                 } else if (val.date) {
                     const dateParts = val.date.split('-');
                     parts.push(`📅 ${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`);
                 }
-                
                 if (val.email) parts.push(`📧 ${val.email}`);
                 if (val.role) {
                     const roleLabels = { 'admin': 'Администратор', 'manager': 'Начальник', 'operator': 'Оператор' };
                     parts.push(`🎭 ${roleLabels[val.role] || val.role}`);
                 }
                 if (val.full_name) parts.push(`👤 ${val.full_name}`);
-                
                 return parts.length > 0 ? parts.join('<br>') : JSON.stringify(val);
             }
             return String(val);
@@ -1439,25 +1300,20 @@
             const time = row.created_at ? new Date(row.created_at).toLocaleString('ru-RU') : '—';
             
             let userName = '—';
-            if (row.user_id === currentUser?.id) {
-                userName = '👤 Вы';
-            } else if (userNames[row.user_id]) {
-                userName = `👤 ${userNames[row.user_id]}`;
-            } else {
-                userName = `👤 ${row.user_id.slice(0, 8)}`;
-            }
+            if (row.user_id === currentUser?.id) userName = '👤 Вы';
+            else if (userNames[row.user_id]) userName = `👤 ${userNames[row.user_id]}`;
+            else userName = `👤 ${row.user_id.slice(0, 8)}`;
             
             const actionLabel = actionLabels[row.action] || row.action;
             let actionColor = '#3498db';
-            if (row.action === 'delete' || row.action === 'delete_user') actionColor = '#e74c3c';
-            else if (row.action === 'insert' || row.action === 'create_user') actionColor = '#27ae60';
-            else if (row.action === 'update_quantity' || row.action === 'update_plan' || row.action === 'update_name') actionColor = '#f39c12';
+            if (row.action === 'delete') actionColor = '#e74c3c';
+            else if (row.action === 'insert') actionColor = '#27ae60';
+            else if (row.action.startsWith('update')) actionColor = '#f39c12';
             
             const tableLabel = tableLabels[row.table_name] || row.table_name;
             const recordIdFormatted = formatRecordId(row.record_id, row.table_name);
-            
-            const oldVal = formatValue(row.old_value, row.table_name, row.record_id);
-            const newVal = formatValue(row.new_value, row.table_name, row.record_id);
+            const oldVal = formatValue(row.old_value, row.table_name);
+            const newVal = formatValue(row.new_value, row.table_name);
             
             html += `<tr>
                 <td style="white-space: nowrap;">${time}</td>
@@ -1498,8 +1354,16 @@
         if (e.key === 'Enter') confirmDeletePart();
     });
 
+    // При повороте экрана или изменении размера — перерисовываем мобильный вид
     window.addEventListener('resize', () => {
-        if (currentUser) renderMobile();
+        if (currentUser) {
+            if (currentRole === 'operator' && window.innerWidth <= 768) {
+                document.body.classList.add('operator-mobile');
+            } else {
+                document.body.classList.remove('operator-mobile');
+            }
+            renderMobile();
+        }
     });
 
     async function checkSession() {

@@ -1224,7 +1224,7 @@
                         <input type="number" inputmode="numeric" pattern="[0-9]*" 
                                id="mobile-input-${part.id}"
                                value="${qty}" min="0" 
-                               oninput="mobileInputChanged(${part.id}, '${today}', this.value)"
+                               onchange="mobileSaveDirect(${part.id}, '${today}', this.value)"
                                onfocus="this.select()">
                     </div>
                 </div>

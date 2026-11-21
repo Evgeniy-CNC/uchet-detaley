@@ -362,10 +362,17 @@
             margin-bottom: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             border-left: 4px solid #3498db;
+            transition: border-color 0.3s;
         }
         #mobileView .mobile-part-card.blank-card {
             border-left-color: #95a5a6;
             background: #f8f9fa;
+        }
+        #mobileView .mobile-part-card.saving {
+            border-left-color: #f39c12 !important;
+        }
+        #mobileView .mobile-part-card.saved {
+            border-left-color: #27ae60 !important;
         }
         #mobileView .mobile-part-name {
             font-weight: 600;
@@ -557,6 +564,10 @@
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth() + 1;
     let pendingDeleteId = null;
+
+    // Очередь сохранений для мобильного режима (предотвращает race condition)
+    const mobileSaveQueue = new Map(); // partId -> Promise
+    let mobileInputDebounce = null;
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
@@ -884,21 +895,58 @@
         await loadData();
     }
 
-    async function mobileSave(partId, dateStr, value) {
-        const qty = parseInt(value) || 0;
-        await saveDailyToDB(partId, dateStr, qty);
+    // ===== МОБИЛЬНЫЕ ФУНКЦИИ С ИСПРАВЛЕНИЕМ RACE CONDITION =====
+    
+    // Оптимистичное обновление: сразу меняем локально, потом сохраняем в базу
+    function applyMobileChange(partId, dateStr, newQty) {
+        // 1. СРАЗУ обновляем локальные данные (до запроса в базу)
         if (!dailyData[dateStr]) dailyData[dateStr] = {};
-        dailyData[dateStr][partId] = qty;
-        updateMobileBadges();
+        dailyData[dateStr][partId] = newQty;
+        
+        // 2. Обновляем поле ввода, если оно есть
+        const input = document.getElementById(`mobile-input-${partId}`);
+        if (input) input.value = newQty;
+        
+        // 3. Показываем визуальную обратную связь
+        const card = document.getElementById(`mobile-part-${partId}`);
+        if (card) {
+            card.classList.add('saving');
+            card.classList.remove('saved');
+        }
+        
+        // 4. Ставим в очередь сохранение в базу
+        const savePromise = (mobileSaveQueue.get(partId) || Promise.resolve())
+            .catch(() => {}) // игнорируем ошибки предыдущих
+            .then(() => saveDailyToDB(partId, dateStr, newQty))
+            .then(() => {
+                if (card) {
+                    card.classList.remove('saving');
+                    card.classList.add('saved');
+                    setTimeout(() => card.classList.remove('saved'), 600);
+                }
+                updateMobileBadges();
+            })
+            .catch(err => {
+                console.error('Save error for part', partId, err);
+                if (card) card.classList.remove('saving');
+            });
+        
+        mobileSaveQueue.set(partId, savePromise);
     }
 
     function mobileAdjust(partId, delta) {
         const today = getTodayStr();
         const currentQty = dailyData[today] && dailyData[today][partId] ? dailyData[today][partId] : 0;
         const newQty = Math.max(0, currentQty + delta);
-        const input = document.getElementById(`mobile-input-${partId}`);
-        if (input) input.value = newQty;
-        mobileSave(partId, today, newQty);
+        applyMobileChange(partId, today, newQty);
+    }
+
+    function debouncedMobileInput(partId, dateStr, value) {
+        clearTimeout(mobileInputDebounce);
+        const qty = parseInt(value) || 0;
+        mobileInputDebounce = setTimeout(() => {
+            applyMobileChange(partId, dateStr, qty);
+        }, 700);
     }
 
     function updateMobileBadges() {
@@ -1222,9 +1270,8 @@
                         <input type="number" inputmode="numeric" pattern="[0-9]*" 
                                id="mobile-input-${part.id}"
                                value="${qty}" min="0" 
-                               onblur="mobileSave(${part.id}, '${today}', this.value)"
-                               onfocus="this.select()"
-                               onkeydown="if(event.key==='Enter') this.blur()">
+                               oninput="debouncedMobileInput(${part.id}, '${today}', this.value)"
+                               onfocus="this.select()">
                         <button class="mobile-btn btn-plus" onclick="mobileAdjust(${part.id}, 1)">+</button>
                     </div>
                 </div>

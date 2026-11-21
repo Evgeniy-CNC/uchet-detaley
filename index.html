@@ -867,11 +867,34 @@
     }
 
     async function confirmDeletePart() {
-        if (currentRole !== 'admin') {
-            document.getElementById('deleteModalError').textContent = 'Только администратор может удалять!';
-            document.getElementById('deleteModalError').style.display = 'block';
+        const password = document.getElementById('deletePasswordInput').value;
+        const errorEl = document.getElementById('deleteModalError');
+        
+        if (!password) {
+            errorEl.textContent = '❌ Введите пароль!';
+            errorEl.style.display = 'block';
             return;
         }
+        
+        if (currentRole !== 'admin') {
+            errorEl.textContent = '❌ Только администратор может удалять!';
+            errorEl.style.display = 'block';
+            return;
+        }
+        
+        // Проверяем пароль через попытку входа
+        const { error } = await supabase.auth.signInWithPassword({ 
+            email: currentUser.email, 
+            password: password 
+        });
+        
+        if (error) {
+            errorEl.textContent = '❌ Неверный пароль!';
+            errorEl.style.display = 'block';
+            return;
+        }
+        
+        // Пароль верный — удаляем деталь
         await deletePartFromDB(pendingDeleteId);
         closeModal('deleteModal');
         await loadData();
@@ -1043,10 +1066,15 @@
             const overPlanAfter = Math.max(0, totalMade - part.plan);
             const monthOver = overPlanAfter - overPlanBefore;
 
-            if (!isCompleted) activeCount++;
-            monthMade += madeThisMonth;
-            monthRemaining += left;
-            if (monthOver > 0) monthOverplan += monthOver;
+            const isBlank = part.name.startsWith('Заготовка для ');
+
+            // В статистику считаем только основные детали (без заготовок)
+            if (!isBlank) {
+                if (!isCompleted) activeCount++;
+                monthMade += madeThisMonth;
+                monthRemaining += left;
+                if (monthOver > 0) monthOverplan += monthOver;
+            }
 
             const completedAt = isCompleted ? getLastActiveDate(part.id) : null;
             const rowClass = isCompleted ? 'completed-row' : '';
@@ -1057,7 +1085,6 @@
             const isFuture = currentMonthStr < createdAt;
             if (isFuture) badge += '<span class="badge badge-future">ещё не начата</span>';
 
-            const isBlank = part.name.startsWith('Заготовка для ');
             const rowTypeClass = isBlank ? 'blank-row' : 'main-row';
             const combinedRowClass = `${rowClass} ${rowTypeClass}`.trim();
 
@@ -1067,7 +1094,7 @@
             bodyHTML += `<td class="name-cell" ${canEditName}>${part.name}${badge}</td>`;
             
             const planDisabled = (currentRole !== 'admin') ? 'disabled' : '';
-            bodyHTML += `<td class="summary-cell"><input type="number" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)"></td>`;
+            bodyHTML += `<td class="summary-cell"><input type="number" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onfocus="this.select()"></td>`;
             
             if (currentRole !== 'operator') {
                 bodyHTML += `<td class="summary-cell">${madePrevMonth}</td>`;
@@ -1092,7 +1119,7 @@
                 const disabled = !canEdit ? 'disabled' : '';
                 const onchange = canEdit ? `onchange="updateDaily(${part.id}, '${dateStr}', this.value)"` : '';
                 
-                bodyHTML += `<td class="${cls}"><input type="number" value="${qty}" min="0" ${disabled} ${onchange}></td>`;
+                bodyHTML += `<td class="${cls}"><input type="number" value="${qty}" min="0" ${disabled} ${onchange} onfocus="this.select()"></td>`;
             }
             if (currentRole === 'admin') {
                 bodyHTML += `<td><button class="delete-row-btn" onclick="requestDeletePart(${part.id})">✕</button></td>`;
@@ -1108,7 +1135,19 @@
 
         document.getElementById('statMonthMade').textContent = monthMade;
         document.getElementById('statMonthLeft').textContent = monthRemaining;
-        document.getElementById('statToday').textContent = dailyData[today] ? Object.values(dailyData[today]).reduce((a,b)=>a+b,0) : 0;
+        
+        // Считаем "сегодня" только по основным деталям (без заготовок)
+        let todayTotal = 0;
+        if (dailyData[today]) {
+            for (let partId in dailyData[today]) {
+                const p = parts.find(x => x.id == partId);
+                if (p && !p.name.startsWith('Заготовка для ')) {
+                    todayTotal += dailyData[today][partId];
+                }
+            }
+        }
+        document.getElementById('statToday').textContent = todayTotal;
+        
         document.getElementById('statActive').textContent = activeCount;
         document.getElementById('statMonthOverplan').textContent = monthOverplan;
     }
@@ -1188,9 +1227,90 @@
         const tbody = document.getElementById('auditBody');
         if (error) { tbody.innerHTML = '<tr><td colspan="7">Ошибка загрузки</td></tr>'; return; }
         
+        // Загружаем детали для отображения названий вместо ID
+        const { data: partsData } = await supabase.from('parts').select('id, name');
+        const partNames = {};
+        (partsData || []).forEach(p => { partNames[p.id] = p.name; });
+        
+        // Загружаем роли для имён пользователей
         const { data: rolesData } = await supabase.from('user_roles').select('*');
         const userNames = {};
         (rolesData || []).forEach(r => { userNames[r.user_id] = r.full_name || 'Пользователь'; });
+        
+        // Перевод действий
+        const actionLabels = {
+            'delete': '🗑️ Удаление',
+            'insert': '➕ Добавление',
+            'update_quantity': '✏️ Изменение количества',
+            'update_plan': '📊 Изменение плана',
+            'update_name': '✍️ Переименование',
+            'insert_or_update': '💾 Сохранение',
+            'create_user': '👤 Создание пользователя',
+            'delete_user': '👤 Удаление пользователя',
+            'reset_password': '🔑 Сброс пароля'
+        };
+        
+        // Перевод таблиц
+        const tableLabels = {
+            'parts': 'Детали',
+            'daily_production': 'Производство',
+            'user_roles': 'Пользователи',
+            'audit_log': 'Журнал'
+        };
+        
+        // Форматирование значений
+        const formatValue = (val, tableName, recordId) => {
+            if (!val) return '—';
+            if (typeof val === 'object') {
+                const parts = [];
+                
+                if (val.name) {
+                    if (tableName === 'parts' || tableName === 'daily_production') {
+                        parts.push(`📦 ${val.name}`);
+                    } else {
+                        parts.push(`Имя: ${val.name}`);
+                    }
+                }
+                
+                if (val.plan !== undefined) {
+                    parts.push(`📋 План: ${val.plan} шт.`);
+                }
+                
+                if (val.quantity !== undefined && val.date) {
+                    const dateParts = val.date.split('-');
+                    const formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
+                    parts.push(`📅 ${formattedDate}: ${val.quantity} шт.`);
+                } else if (val.quantity !== undefined) {
+                    parts.push(`Количество: ${val.quantity} шт.`);
+                } else if (val.date) {
+                    const dateParts = val.date.split('-');
+                    parts.push(`📅 ${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`);
+                }
+                
+                if (val.email) parts.push(`📧 ${val.email}`);
+                if (val.role) {
+                    const roleLabels = { 'admin': 'Администратор', 'manager': 'Начальник', 'operator': 'Оператор' };
+                    parts.push(`🎭 ${roleLabels[val.role] || val.role}`);
+                }
+                if (val.full_name) parts.push(`👤 ${val.full_name}`);
+                
+                return parts.length > 0 ? parts.join('<br>') : JSON.stringify(val);
+            }
+            return String(val);
+        };
+        
+        // Форматирование ID записи
+        const formatRecordId = (recordId, tableName) => {
+            if (!recordId) return '—';
+            if (tableName === 'parts' || tableName === 'daily_production') {
+                const partName = partNames[recordId];
+                if (partName) {
+                    const shortName = partName.length > 30 ? partName.substring(0, 30) + '...' : partName;
+                    return `#${recordId} — ${shortName}`;
+                }
+            }
+            return `#${recordId}`;
+        };
         
         let html = '';
         (data || []).forEach(row => {
@@ -1198,51 +1318,33 @@
             
             let userName = '—';
             if (row.user_id === currentUser?.id) {
-                userName = 'Вы';
+                userName = '👤 Вы';
             } else if (userNames[row.user_id]) {
-                userName = userNames[row.user_id];
+                userName = `👤 ${userNames[row.user_id]}`;
             } else {
-                userName = row.user_id.slice(0, 8);
+                userName = `👤 ${row.user_id.slice(0, 8)}`;
             }
             
-            let actionIcon = '📝';
-            if (row.action === 'insert') actionIcon = '➕';
-            else if (row.action === 'delete') actionIcon = '🗑️';
-            else if (row.action === 'update_quantity') actionIcon = '✏️';
-            else if (row.action === 'update_plan') actionIcon = '📊';
-            else if (row.action === 'update_name') actionIcon = '✍️';
-            
-            const formatValue = (val) => {
-                if (!val) return '—';
-                if (typeof val === 'object') {
-                    const parts = [];
-                    if (val.name) parts.push(`Название: ${val.name}`);
-                    if (val.plan !== undefined) parts.push(`План: ${val.plan}`);
-                    if (val.quantity !== undefined) parts.push(`Кол-во: ${val.quantity}`);
-                    if (val.date) parts.push(`Дата: ${val.date}`);
-                    if (val.email) parts.push(`Email: ${val.email}`);
-                    if (val.role) parts.push(`Роль: ${val.role}`);
-                    if (val.full_name) parts.push(`ФИО: ${val.full_name}`);
-                    return parts.length > 0 ? parts.join(', ') : JSON.stringify(val);
-                }
-                return String(val);
-            };
-            
-            const oldVal = formatValue(row.old_value);
-            const newVal = formatValue(row.new_value);
-            
+            const actionLabel = actionLabels[row.action] || row.action;
             let actionColor = '#3498db';
-            if (row.action === 'delete') actionColor = '#e74c3c';
-            else if (row.action === 'insert') actionColor = '#27ae60';
+            if (row.action === 'delete' || row.action === 'delete_user') actionColor = '#e74c3c';
+            else if (row.action === 'insert' || row.action === 'create_user') actionColor = '#27ae60';
+            else if (row.action === 'update_quantity' || row.action === 'update_plan' || row.action === 'update_name') actionColor = '#f39c12';
+            
+            const tableLabel = tableLabels[row.table_name] || row.table_name;
+            const recordIdFormatted = formatRecordId(row.record_id, row.table_name);
+            
+            const oldVal = formatValue(row.old_value, row.table_name, row.record_id);
+            const newVal = formatValue(row.new_value, row.table_name, row.record_id);
             
             html += `<tr>
-                <td>${time}</td>
-                <td><strong>${userName}</strong></td>
-                <td style="color: ${actionColor}; font-weight: bold;">${actionIcon} ${row.action}</td>
-                <td>${row.table_name}</td>
-                <td>${row.record_id || '—'}</td>
-                <td style="font-size: 12px; color: #e74c3c;">${oldVal}</td>
-                <td style="font-size: 12px; color: #27ae60;">${newVal}</td>
+                <td style="white-space: nowrap;">${time}</td>
+                <td>${userName}</td>
+                <td style="color: ${actionColor}; font-weight: bold;">${actionLabel}</td>
+                <td>${tableLabel}</td>
+                <td style="font-size: 11px;">${recordIdFormatted}</td>
+                <td style="font-size: 11px; color: #e74c3c;">${oldVal}</td>
+                <td style="font-size: 11px; color: #27ae60;">${newVal}</td>
             </tr>`;
         });
         tbody.innerHTML = html || '<tr><td colspan="7">Нет записей</td></tr>';

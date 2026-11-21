@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Учет производства деталей</title>
-       <script src="supabase.min.js"></script>
+    <script src="supabase.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -459,7 +459,7 @@
     <div id="tab-users" class="tab-content">
         <h2>👥 Управление пользователями</h2>
         <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
-        ℹ️ Пользователи создаются через панель Supabase: <strong>Authentication → Users → Add user</strong>
+            ℹ️ Пользователи создаются через панель Supabase: <strong>Authentication → Users → Add user</strong>
         </p>
         <div class="table-wrapper" style="margin-top: 15px;">
             <table class="users-table">
@@ -510,27 +510,6 @@
             <button class="modal-btn-cancel" onclick="closeModal('deleteModal')">Отмена</button>
         </div>
         <div class="modal-error" id="deleteModalError">❌ Неверный пароль!</div>
-    </div>
-</div>
-
-<!-- МОДАЛКА: ДОБАВИТЬ ПОЛЬЗОВАТЕЛЯ -->
-<div class="modal-overlay" id="addUserModal">
-    <div class="modal">
-        <h3>➕ Добавить пользователя</h3>
-        <input type="email" id="newUserEmail" placeholder="Email (логин)">
-        <input type="password" id="newUserPassword" placeholder="Пароль (мин. 6 символов)">
-        <input type="text" id="newUserFullName" placeholder="ФИО">
-        <select id="newUserRole">
-            <option value="operator">Оператор</option>
-            <option value="manager">Начальник</option>
-            <option value="admin">Администратор</option>
-        </select>
-        <div class="modal-buttons">
-            <button class="modal-btn-confirm" onclick="createUser()">Создать</button>
-            <button class="modal-btn-cancel" onclick="closeModal('addUserModal')">Отмена</button>
-        </div>
-        <div class="modal-error" id="addUserError"></div>
-        <div class="modal-success" id="addUserSuccess">✅ Пользователь создан!</div>
     </div>
 </div>
 
@@ -626,7 +605,6 @@
         roleEl.textContent = currentRole === 'admin' ? 'Администратор' : currentRole === 'manager' ? 'Начальник' : 'Оператор';
         roleEl.className = 'role-badge role-' + currentRole;
 
-        // Настройка видимости вкладок и контролов
         if (currentRole === 'admin') {
             document.getElementById('adminControls').style.display = 'flex';
             document.getElementById('tabUsers').style.display = 'inline-block';
@@ -648,7 +626,6 @@
 
     // ==================== ЗАГРУЗКА ДАННЫХ ====================
     async function loadData() {
-        // Загружаем детали
         const { data: partsData, error: partsError } = await supabase
             .from('parts')
             .select('*')
@@ -656,13 +633,11 @@
         if (partsError) { console.error(partsError); return; }
         parts = partsData || [];
 
-        // Загружаем производство
         const { data: prodData, error: prodError } = await supabase
             .from('daily_production')
             .select('*');
         if (prodError) { console.error(prodError); return; }
 
-        // Преобразуем в удобный формат
         dailyData = {};
         (prodData || []).forEach(row => {
             if (!dailyData[row.date]) dailyData[row.date] = {};
@@ -686,7 +661,6 @@
     async function deletePartFromDB(partId) {
         const { error } = await supabase.from('parts').delete().eq('id', partId);
         if (error) { alert('Ошибка удаления: ' + error.message); return false; }
-        // Удаляем связанные записи производства
         await supabase.from('daily_production').delete().eq('part_id', partId);
         await logAudit('delete', 'parts', partId, {id: partId}, null);
         return true;
@@ -770,9 +744,6 @@
     }
 
     async function confirmDeletePart() {
-        const password = document.getElementById('deletePasswordInput').value;
-        // Проверяем пароль через попытку входа (упрощённо — сверяем с текущим пользователем)
-        // Для безопасности используем проверку: если пользователь админ — разрешаем
         if (currentRole !== 'admin') {
             document.getElementById('deleteModalError').textContent = 'Только администратор может удалять!';
             document.getElementById('deleteModalError').style.display = 'block';
@@ -798,7 +769,6 @@
         for (let date of dates) {
             if (overPlan <= 0) break;
             let qty = dailyData[date][partId];
-            let oldQty = qty;
             if (qty <= overPlan) {
                 overPlan -= qty;
                 qty = 0;
@@ -849,7 +819,15 @@
     function getMonthStr(year, month) { return `${year}-${String(month).padStart(2, '0')}`; }
     function getDateStr(day) { return `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`; }
     function formatDateShort(dateStr) { const p = dateStr.split('-'); return `${p[2]}.${p[1]}`; }
-    function formatDateFull(dateStr) {     if (!dateStr) return '—';     const date = new Date(dateStr);     if (isNaN(date.getTime())) return '—';     const day = String(date.getDate()).padStart(2, '0');     const month = String(date.getMonth() + 1).padStart(2, '0');     const year = date.getFullYear();     return `${day}.${month}.${year}`; }
+    function formatDateFull(dateStr) {
+        if (!dateStr) return '—';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '—';
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}.${month}.${year}`;
+    }
     function getTodayStr() { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; }
     function getPreviousMonthStr(year, month) {
         if (month === 1) return `${year - 1}-12`;
@@ -902,7 +880,6 @@
             }
         });
 
-        // Заголовок таблицы
         const thead = document.getElementById('tableHead');
         let headHTML = '<tr>';
         headHTML += '<th class="name-col">Деталь</th>';
@@ -930,7 +907,6 @@
         headHTML += '</tr>';
         thead.innerHTML = headHTML;
 
-        // Тело таблицы
         const tbody = document.getElementById('tableBody');
         let bodyHTML = '';
         let activeCount = 0, monthPlan = 0, monthMade = 0, monthRemaining = 0, monthOverplan = 0;
@@ -1040,94 +1016,23 @@
 
     // ==================== УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ ====================
     async function renderUsers() {
-        const { data: roles, error: rErr } = await supabase.from('user_roles').select('*, user:auth.users(email)');
+        const { data: roles, error: rErr } = await supabase.from('user_roles').select('*');
         const tbody = document.getElementById('usersBody');
         if (rErr) { tbody.innerHTML = '<tr><td colspan="5">Ошибка загрузки</td></tr>'; return; }
         
         let html = '';
         (roles || []).forEach(u => {
             const roleName = u.role === 'admin' ? 'Администратор' : u.role === 'manager' ? 'Начальник' : 'Оператор';
-            const email = u.user?.email || '—';
             const created = u.created_at ? new Date(u.created_at).toLocaleString('ru-RU') : '—';
             html += `<tr>
-                <td>${email}</td>
+                <td>${u.user_id}</td>
                 <td>${u.full_name || '—'}</td>
                 <td>${roleName}</td>
                 <td>${created}</td>
-                <td>
-                    <button class="action-btn btn-edit" onclick="openResetPassword('${email}')">Сбросить пароль</button>
-                    ${u.role !== 'admin' ? `<button class="action-btn btn-delete" onclick="deleteUser('${u.user_id}', '${email}')">Удалить</button>` : ''}
-                </td>
+                <td>—</td>
             </tr>`;
         });
         tbody.innerHTML = html || '<tr><td colspan="5">Нет пользователей</td></tr>';
-    }
-
-    function openAddUserModal() {
-        document.getElementById('newUserEmail').value = '';
-        document.getElementById('newUserPassword').value = '';
-        document.getElementById('newUserFullName').value = '';
-        document.getElementById('newUserRole').value = 'operator';
-        document.getElementById('addUserError').style.display = 'none';
-        document.getElementById('addUserSuccess').style.display = 'none';
-        document.getElementById('addUserModal').classList.add('active');
-    }
-
-    async function createUser() {
-        const email = document.getElementById('newUserEmail').value.trim();
-        const password = document.getElementById('newUserPassword').value;
-        const fullName = document.getElementById('newUserFullName').value.trim();
-        const role = document.getElementById('newUserRole').value;
-        const errorEl = document.getElementById('addUserError');
-        const successEl = document.getElementById('addUserSuccess');
-        errorEl.style.display = 'none';
-        successEl.style.display = 'none';
-
-        if (!email || !password || password.length < 6) {
-            errorEl.textContent = 'Email обязателен, пароль мин. 6 символов';
-            errorEl.style.display = 'block';
-            return;
-        }
-
-        // Создаём пользователя через admin API (требует service_role ключ, но мы используем workaround через RPC)
-        // В нашем случае используем прямой вызов auth.admin.createUser через Supabase JS
-        const { data, error } = await supabase.auth.admin.createUser({
-            email: email,
-            password: password,
-            email_confirm: true
-        });
-
-        if (error) {
-            errorEl.textContent = 'Ошибка: ' + error.message;
-            errorEl.style.display = 'block';
-            return;
-        }
-
-        // Добавляем роль
-        const { error: roleError } = await supabase.from('user_roles').insert({
-            user_id: data.user.id,
-            role: role,
-            full_name: fullName
-        });
-
-        if (roleError) {
-            errorEl.textContent = 'Пользователь создан, но роль не назначена: ' + roleError.message;
-            errorEl.style.display = 'block';
-            return;
-        }
-
-        await logAudit('create_user', 'user_roles', data.user.id, null, {email, role, full_name: fullName});
-        successEl.style.display = 'block';
-        setTimeout(() => { closeModal('addUserModal'); renderUsers(); }, 1000);
-    }
-
-    async function deleteUser(userId, email) {
-        if (!confirm(`Удалить пользователя ${email}?`)) return;
-        const { error } = await supabase.auth.admin.deleteUser(userId);
-        if (error) { alert('Ошибка: ' + error.message); return; }
-        await supabase.from('user_roles').delete().eq('user_id', userId);
-        await logAudit('delete_user', 'user_roles', userId, {email}, null);
-        renderUsers();
     }
 
     let resetPasswordTargetEmail = null;
@@ -1141,28 +1046,8 @@
     }
 
     async function resetUserPassword() {
-        const newPass = document.getElementById('newPasswordInput').value;
-        const errorEl = document.getElementById('resetPasswordError');
-        const successEl = document.getElementById('resetPasswordSuccess');
-        errorEl.style.display = 'none';
-        successEl.style.display = 'none';
-
-        if (newPass.length < 6) {
-            errorEl.textContent = 'Пароль мин. 6 символов';
-            errorEl.style.display = 'block';
-            return;
-        }
-
-        // Находим user_id по email
-        const { data: roleData } = await supabase.from('user_roles').select('user_id').eq('user:auth.users(email)', resetPasswordTargetEmail).single();
-        if (!roleData) { errorEl.textContent = 'Пользователь не найден'; errorEl.style.display = 'block'; return; }
-
-        const { error } = await supabase.auth.admin.updateUserById(roleData.user_id, { password: newPass });
-        if (error) { errorEl.textContent = 'Ошибка: ' + error.message; errorEl.style.display = 'block'; return; }
-
-        await logAudit('reset_password', 'auth.users', roleData.user_id, null, {email: resetPasswordTargetEmail});
-        successEl.style.display = 'block';
-        setTimeout(() => closeModal('resetPasswordModal'), 1000);
+        alert('Сброс пароля через интерфейс отключён. Используйте SQL Editor в Supabase.');
+        closeModal('resetPasswordModal');
     }
 
     // ==================== ЖУРНАЛ АУДИТА ====================
@@ -1176,19 +1061,61 @@
         const tbody = document.getElementById('auditBody');
         if (error) { tbody.innerHTML = '<tr><td colspan="7">Ошибка загрузки</td></tr>'; return; }
         
+        // Загружаем список ролей для сопоставления имён
+        const { data: rolesData } = await supabase.from('user_roles').select('*');
+        const userNames = {};
+        (rolesData || []).forEach(r => { userNames[r.user_id] = r.full_name || 'Пользователь'; });
+        
         let html = '';
         (data || []).forEach(row => {
             const time = row.created_at ? new Date(row.created_at).toLocaleString('ru-RU') : '—';
-            const oldVal = row.old_value ? JSON.stringify(row.old_value) : '—';
-            const newVal = row.new_value ? JSON.stringify(row.new_value) : '—';
+            
+            let userName = '—';
+            if (row.user_id === currentUser?.id) {
+                userName = 'Вы';
+            } else if (userNames[row.user_id]) {
+                userName = userNames[row.user_id];
+            } else {
+                userName = row.user_id.slice(0, 8);
+            }
+            
+            let actionIcon = '📝';
+            if (row.action === 'insert') actionIcon = '➕';
+            else if (row.action === 'delete') actionIcon = '🗑️';
+            else if (row.action === 'update_quantity') actionIcon = '✏️';
+            else if (row.action === 'update_plan') actionIcon = '📊';
+            
+            const formatValue = (val) => {
+                if (!val) return '—';
+                if (typeof val === 'object') {
+                    const parts = [];
+                    if (val.name) parts.push(`Название: ${val.name}`);
+                    if (val.plan !== undefined) parts.push(`План: ${val.plan}`);
+                    if (val.quantity !== undefined) parts.push(`Кол-во: ${val.quantity}`);
+                    if (val.date) parts.push(`Дата: ${val.date}`);
+                    if (val.email) parts.push(`Email: ${val.email}`);
+                    if (val.role) parts.push(`Роль: ${val.role}`);
+                    if (val.full_name) parts.push(`ФИО: ${val.full_name}`);
+                    return parts.length > 0 ? parts.join(', ') : JSON.stringify(val);
+                }
+                return String(val);
+            };
+            
+            const oldVal = formatValue(row.old_value);
+            const newVal = formatValue(row.new_value);
+            
+            let actionColor = '#3498db';
+            if (row.action === 'delete') actionColor = '#e74c3c';
+            else if (row.action === 'insert') actionColor = '#27ae60';
+            
             html += `<tr>
                 <td>${time}</td>
-                <td>${row.user_id === currentUser.id ? 'Вы' : row.user_id.slice(0,8)}</td>
-                <td>${row.action}</td>
+                <td><strong>${userName}</strong></td>
+                <td style="color: ${actionColor}; font-weight: bold;">${actionIcon} ${row.action}</td>
                 <td>${row.table_name}</td>
                 <td>${row.record_id || '—'}</td>
-                <td style="font-size:11px;">${oldVal}</td>
-                <td style="font-size:11px;">${newVal}</td>
+                <td style="font-size: 12px; color: #e74c3c;">${oldVal}</td>
+                <td style="font-size: 12px; color: #27ae60;">${newVal}</td>
             </tr>`;
         });
         tbody.innerHTML = html || '<tr><td colspan="7">Нет записей</td></tr>';
@@ -1208,14 +1135,12 @@
         document.getElementById(id).classList.remove('active');
     }
 
-    // Закрытие модалок по клику вне
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) overlay.classList.remove('active');
         });
     });
 
-    // Enter в полях входа
     document.getElementById('loginPassword').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') doLogin();
     });
@@ -1223,7 +1148,6 @@
         if (e.key === 'Enter') confirmDeletePart();
     });
 
-    // Проверка сессии при загрузке
     async function checkSession() {
         const { data } = await supabase.auth.getSession();
         if (data.session) {

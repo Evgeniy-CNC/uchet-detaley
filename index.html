@@ -327,41 +327,29 @@
             color: #555 !important;
         }
 
-        /* Мобильный режим */
-        #mobileView { display: none; }
+        /* ===== МОБИЛЬНЫЙ РЕЖИМ (компактный) ===== */
+        #mobileView { display: none; width: 100%; max-width: 100%; overflow: hidden; }
         #desktopTable { display: block; }
-
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            h1 { font-size: 20px; }
-            .stat-item p { font-size: 18px; }
-            .stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .stat-item { padding: 8px; }
-            .stat-item h3 { font-size: 11px; }
-            
-            body.operator-mobile #desktopTable { display: none !important; }
-            body.operator-mobile #mobileView { display: block !important; }
-            body.operator-mobile #operatorControls { display: none !important; }
-        }
 
         #mobileView .mobile-header {
             background: white;
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        #mobileView .mobile-header h3 { margin: 0; color: #2c3e50; }
-        #mobileView .mobile-header p { margin: 5px 0 0; color: #7f8c8d; font-size: 14px; }
+        #mobileView .mobile-header h3 { margin: 0; color: #2c3e50; font-size: 15px; }
+        #mobileView .mobile-header p { margin: 4px 0 0; color: #7f8c8d; font-size: 12px; }
 
         #mobileView .mobile-part-card {
             background: white;
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             border-left: 4px solid #3498db;
+            width: 100%;
         }
         #mobileView .mobile-part-card.blank-card {
             border-left-color: #95a5a6;
@@ -369,19 +357,22 @@
         }
         #mobileView .mobile-part-name {
             font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 10px;
+            font-size: 13px;
+            margin-bottom: 8px;
             color: #2c3e50;
+            word-break: break-word;
         }
         #mobileView .mobile-input-row {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            width: 100%;
         }
         #mobileView .mobile-input-row input {
             flex: 1;
-            padding: 12px;
-            font-size: 20px;
+            min-width: 0;
+            padding: 10px 4px;
+            font-size: 18px;
             border: 2px solid #ddd;
             border-radius: 6px;
             text-align: center;
@@ -392,19 +383,36 @@
             outline: none;
         }
         #mobileView .mobile-btn {
-            padding: 14px 18px;
-            font-size: 20px;
+            padding: 10px 0;
+            font-size: 18px;
             font-weight: bold;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            min-width: 55px;
+            min-width: 44px;
+            width: 44px;
+            flex: 0 0 44px;
             color: white;
         }
         #mobileView .btn-minus { background: #e74c3c; }
         #mobileView .btn-minus:active { background: #c0392b; }
         #mobileView .btn-plus { background: #27ae60; }
         #mobileView .btn-plus:active { background: #219653; }
+
+        @media (max-width: 768px) {
+            body { padding: 8px; overflow-x: hidden; }
+            h1 { font-size: 18px; }
+            .top-bar { padding: 10px 12px; }
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 10px; }
+            .stat-item { padding: 8px; }
+            .stat-item h3 { font-size: 10px; }
+            .stat-item p { font-size: 16px; }
+            .tab-btn { padding: 8px 12px; font-size: 12px; }
+
+            body.operator-mobile #desktopTable { display: none !important; }
+            body.operator-mobile #mobileView { display: block !important; }
+            body.operator-mobile #operatorControls { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -881,11 +889,42 @@
         await loadData();
     }
 
+    // ===== МОБИЛЬНЫЕ ФУНКЦИИ =====
     function mobileAdjust(partId, delta) {
         const today = getTodayStr();
         const currentQty = dailyData[today] && dailyData[today][partId] ? dailyData[today][partId] : 0;
         const newQty = Math.max(0, currentQty + delta);
-        updateDaily(partId, today, newQty);
+        const input = document.getElementById(`mobile-input-${partId}`);
+        if (input) input.value = newQty;
+        mobileSave(partId, today, newQty);
+    }
+
+    async function mobileSave(partId, dateStr, value) {
+        const qty = parseInt(value) || 0;
+        await saveDailyToDB(partId, dateStr, qty);
+        if (!dailyData[dateStr]) dailyData[dateStr] = {};
+        if (qty === 0) delete dailyData[dateStr][partId];
+        else dailyData[dateStr][partId] = qty;
+        // render() обновит статистику, но НЕ тронет мобильные поля — фокус сохранится
+        render();
+        updateMobileBadges();
+    }
+
+    function updateMobileBadges() {
+        parts.forEach(part => {
+            const card = document.getElementById(`mobile-part-${part.id}`);
+            if (!card) return;
+            const nameDiv = card.querySelector('.mobile-part-name');
+            if (!nameDiv) return;
+            nameDiv.querySelectorAll('.badge').forEach(b => b.remove());
+            const totalMade = getTotalMade(part.id);
+            if (part.plan > 0) {
+                let badgeHTML = '';
+                if (totalMade >= part.plan) badgeHTML = '<span class="badge badge-done" style="margin-left: 6px;">✓ Готово</span>';
+                else if (totalMade > 0) badgeHTML = `<span class="badge badge-progress" style="margin-left: 6px;">${totalMade}/${part.plan}</span>`;
+                if (badgeHTML) nameDiv.insertAdjacentHTML('beforeend', badgeHTML);
+            }
+        });
     }
 
     function getTotalMade(partId) {
@@ -1166,21 +1205,32 @@
         
         todayParts.forEach(part => {
             const qty = dailyData[today] && dailyData[today][part.id] ? dailyData[today][part.id] : 0;
+            const totalMade = getTotalMade(part.id);
             const isBlank = part.name.startsWith('Заготовка для ');
             const cardClass = isBlank ? 'mobile-part-card blank-card' : 'mobile-part-card';
             const displayName = formatPartName(part.name);
             
+            let badge = '';
+            if (part.plan > 0) {
+                if (totalMade >= part.plan) {
+                    badge = '<span class="badge badge-done" style="margin-left: 6px;">✓ Готово</span>';
+                } else if (totalMade > 0) {
+                    badge = `<span class="badge badge-progress" style="margin-left: 6px;">${totalMade}/${part.plan}</span>`;
+                }
+            }
+            
             html += `
-                <div class="${cardClass}">
-                    <div class="mobile-part-name">${displayName}</div>
+                <div class="${cardClass}" id="mobile-part-${part.id}">
+                    <div class="mobile-part-name">${displayName}${badge}</div>
                     <div class="mobile-input-row">
-                        <button class="mobile-btn btn-minus" onclick="mobileAdjust(${part.id}, -1)">−1</button>
+                        <button class="mobile-btn btn-minus" onclick="mobileAdjust(${part.id}, -1)">−</button>
                         <input type="number" inputmode="numeric" pattern="[0-9]*" 
+                               id="mobile-input-${part.id}"
                                value="${qty}" min="0" 
-                               onblur="updateDaily(${part.id}, '${today}', this.value)"
+                               onblur="mobileSave(${part.id}, '${today}', this.value)"
                                onfocus="this.select()"
                                onkeydown="if(event.key==='Enter') this.blur()">
-                        <button class="mobile-btn btn-plus" onclick="mobileAdjust(${part.id}, 1)">+1</button>
+                        <button class="mobile-btn btn-plus" onclick="mobileAdjust(${part.id}, 1)">+</button>
                     </div>
                 </div>
             `;

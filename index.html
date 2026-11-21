@@ -1092,7 +1092,7 @@
             bodyHTML += `<td class="name-cell" ${canEditName}>${displayName}${badge}</td>`;
             
             const planDisabled = (currentRole !== 'admin') ? 'disabled' : '';
-            bodyHTML += `<td class="summary-cell"><input type="number" inputmode="decimal" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onclick="this.select()" onfocus="this.select()"></td>`;
+            bodyHTML += `<td class="summary-cell"><input type="number" inputmode="decimal" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onmousedown="this.select()" onfocus="this.select()"></td>`;
             
             if (currentRole !== 'operator') {
                 bodyHTML += `<td class="summary-cell">${madePrevMonth}</td>`;
@@ -1224,7 +1224,7 @@
                         <input type="number" inputmode="numeric" pattern="[0-9]*" 
                                id="mobile-input-${part.id}"
                                value="${qty}" min="0" 
-                               onchange="mobileSaveDirect(${part.id}, '${today}', this.value)"
+                               oninput="mobileInputChanged(${part.id}, '${today}', this.value)"
                                onfocus="this.select()">
                     </div>
                 </div>

@@ -18,7 +18,7 @@
         h1 { text-align: center; color: #2c3e50; }
         h2 { color: #2c3e50; margin-top: 30px; }
 
-        /* Убираем стрелочки у number input во всех браузерах */
+        /* Убираем стрелочки у number input */
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -565,7 +565,6 @@
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth() + 1;
     let pendingDeleteId = null;
-
     let mobileDebounceTimers = {};
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -894,7 +893,7 @@
         await loadData();
     }
 
-    // Мобильный ввод с debounce по каждой детали отдельно
+    // Мобильный ввод с debounce — клавиатура не убегает
     function mobileInputChanged(partId, dateStr, value) {
         const qty = parseInt(value) || 0;
         

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
     <title>Учет производства деталей</title>
     <script src="supabase.min.js"></script>
     <style>
@@ -238,6 +239,9 @@
             padding: 12px;
             border-radius: 6px;
             text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
         .stat-item h3 { margin: 0; font-size: 13px; color: #555; }
         .stat-item p { margin: 5px 0 0; font-size: 24px; font-weight: bold; color: #2980b9; }
@@ -263,15 +267,6 @@
             border-bottom: 1px solid #ddd;
         }
         .users-table th { background: #34495e; color: white; }
-        .action-btn {
-            padding: 5px 10px;
-            margin: 2px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            color: white;
-        }
 
         .modal-overlay {
             display: none;
@@ -322,19 +317,17 @@
 
         .loading { text-align: center; padding: 40px; color: #7f8c8d; font-size: 18px; }
 
-        /* Разделение строк: заготовка/основная */
         tr.blank-row td { border-bottom: 3px solid #34495e !important; }
         tr.blank-row td.name-cell { border-bottom: 3px solid #34495e !important; }
         tr.main-row td { border-bottom: 1px solid #ddd; }
 
-        /* "Заготовка для" — жирный курсив */
         .blank-prefix {
             font-style: italic !important;
             font-weight: bold !important;
             color: #555 !important;
         }
 
-        /* ===== МОБИЛЬНЫЙ РЕЖИМ ===== */
+        /* Мобильный режим */
         #mobileView { display: none; }
         #desktopTable { display: block; }
 
@@ -346,7 +339,6 @@
             .stat-item { padding: 8px; }
             .stat-item h3 { font-size: 11px; }
             
-            /* Оператор на мобильном: скрываем таблицу, показываем мобильный вид */
             body.operator-mobile #desktopTable { display: none !important; }
             body.operator-mobile #mobileView { display: block !important; }
             body.operator-mobile #operatorControls { display: none !important; }
@@ -442,7 +434,7 @@
         <button class="tab-btn active" onclick="showTab('production')">📊 Производство</button>
         <button class="tab-btn" onclick="showTab('overplan')">📈 Сверх плана</button>
         <button class="tab-btn" onclick="showTab('users')" id="tabUsers" style="display:none;">👥 Пользователи</button>
-        <button class="tab-btn" onclick="showTab('audit')">📜 История</button>
+        <button class="tab-btn" onclick="showTab('audit')" id="tabAudit">📜 История</button>
     </div>
 
     <div id="tab-production" class="tab-content active">
@@ -469,7 +461,6 @@
             <div><label>Текущий период: </label><strong id="currentPeriodLabel">—</strong></div>
         </div>
 
-        <!-- Десктопная таблица -->
         <div id="desktopTable" class="table-wrapper">
             <table id="mainTable">
                 <thead id="tableHead"></thead>
@@ -477,7 +468,6 @@
             </table>
         </div>
 
-        <!-- Мобильный вид (только для операторов) -->
         <div id="mobileView">
             <div class="mobile-header">
                 <h3>📱 Сменное задание</h3>
@@ -629,9 +619,11 @@
         if (currentRole === 'admin') {
             document.getElementById('adminControls').style.display = 'flex';
             document.getElementById('tabUsers').style.display = 'inline-block';
+            document.getElementById('tabAudit').style.display = '';
         } else {
             document.getElementById('adminControls').style.display = 'none';
             document.getElementById('tabUsers').style.display = 'none';
+            document.getElementById('tabAudit').style.display = 'none';
         }
 
         if (currentRole === 'operator') {
@@ -641,7 +633,6 @@
             document.getElementById('operatorControls').style.display = 'none';
         }
 
-        // Включаем мобильный режим для операторов
         if (currentRole === 'operator' && window.innerWidth <= 768) {
             document.body.classList.add('operator-mobile');
         } else {
@@ -964,7 +955,6 @@
         monthPicker.onchange = (e) => { currentMonth = parseInt(e.target.value); render(); };
     }
 
-    // Форматирование названия: "Заготовка для" — жирный курсив, остальное обычным
     function formatPartName(name) {
         if (name.startsWith('Заготовка для ')) {
             const rest = name.substring('Заготовка для '.length);
@@ -1153,7 +1143,6 @@
         const isMobile = window.innerWidth <= 768;
         const isOperator = currentRole === 'operator';
         
-        // Управление видимостью через класс на body
         if (isMobile && isOperator) {
             document.body.classList.add('operator-mobile');
         } else {
@@ -1186,10 +1175,11 @@
                     <div class="mobile-part-name">${displayName}</div>
                     <div class="mobile-input-row">
                         <button class="mobile-btn btn-minus" onclick="mobileAdjust(${part.id}, -1)">−1</button>
-                        <input type="number" inputmode="decimal" pattern="[0-9]*" 
+                        <input type="number" inputmode="numeric" pattern="[0-9]*" 
                                value="${qty}" min="0" 
-                               onchange="updateDaily(${part.id}, '${today}', this.value)"
-                               onfocus="this.select()">
+                               onblur="updateDaily(${part.id}, '${today}', this.value)"
+                               onfocus="this.select()"
+                               onkeydown="if(event.key==='Enter') this.blur()">
                         <button class="mobile-btn btn-plus" onclick="mobileAdjust(${part.id}, 1)">+1</button>
                     </div>
                 </div>
@@ -1354,7 +1344,6 @@
         if (e.key === 'Enter') confirmDeletePart();
     });
 
-    // При повороте экрана или изменении размера — перерисовываем мобильный вид
     window.addEventListener('resize', () => {
         if (currentUser) {
             if (currentRole === 'operator' && window.innerWidth <= 768) {

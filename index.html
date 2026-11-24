@@ -882,7 +882,6 @@
         await loadData();
     }
 
-    // Мобильный ввод с debounce — клавиатура не убегает
     function mobileInputChanged(partId, dateStr, value) {
         const qty = parseInt(value) || 0;
         
@@ -1081,8 +1080,7 @@
             bodyHTML += `<td class="name-cell" ${canEditName}>${displayName}${badge}</td>`;
             
             const planDisabled = (currentRole !== 'admin') ? 'disabled' : '';
-            // ЗАМЕНА: type="text" вместо number
-            bodyHTML += `<td class="summary-cell"><input type="text" inputmode="numeric" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onmousedown="this.select()" onfocus="this.select()"></td>`;
+            bodyHTML += `<td class="summary-cell"><input type="text" inputmode="numeric" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onclick="this.select()" onfocus="this.select()"></td>`;
             
             if (currentRole !== 'operator') {
                 bodyHTML += `<td class="summary-cell">${madePrevMonth}</td>`;
@@ -1107,8 +1105,7 @@
                 const disabled = !canEdit ? 'disabled' : '';
                 const onchange = canEdit ? `onchange="updateDaily(${part.id}, '${dateStr}', this.value)"` : '';
                 
-                // ЗАМЕНА: type="text" вместо number
-                bodyHTML += `<td class="${cls}"><input type="text" inputmode="numeric" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} onmousedown="this.select()" onfocus="this.select()"></td>`;
+                bodyHTML += `<td class="${cls}"><input type="text" inputmode="numeric" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} onclick="this.select()" onfocus="this.select()"></td>`;
             }
             if (currentRole === 'admin') {
                 bodyHTML += `<td><button class="delete-row-btn" onclick="requestDeletePart(${part.id})">✕</button></td>`;
@@ -1208,7 +1205,6 @@
                 }
             }
             
-            // ЗАМЕНА: type="text" вместо number
             html += `
                 <div class="${cardClass}" id="mobile-part-${part.id}">
                     <div class="mobile-part-name">${displayName}${badge}</div>

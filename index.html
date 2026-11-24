@@ -405,6 +405,9 @@
             border-color: #3498db;
             outline: none;
         }
+        #mobileView .mobile-input-row input::placeholder {
+            color: #ccc;
+        }
     </style>
 </head>
 <body>
@@ -555,6 +558,7 @@
     let currentMonth = new Date().getMonth() + 1;
     let pendingDeleteId = null;
     let mobileDebounceTimers = {};
+    let lastWindowWidth = window.innerWidth;
 
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
@@ -713,7 +717,6 @@
         return true;
     }
 
-    // === ИСПРАВЛЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ (ВАШ ВАРИАНТ) ===
     async function saveDailyToDB(partId, dateStr, quantity) {
         const qty = parseInt(quantity) || 0;
         
@@ -741,14 +744,12 @@
                 if (error) { alert('Ошибка удаления: ' + error.message); return; }
             }
         } else if (existing) {
-            // Запись уже есть — делаем прямой UPDATE по её id
             const { error } = await supabase
                 .from('daily_production')
                 .update({ quantity: qty, updated_at: new Date().toISOString() })
                 .eq('id', existing.id);
             if (error) { alert('Ошибка обновления: ' + error.message); return; }
         } else {
-            // Записи нет — делаем INSERT
             const { error } = await supabase
                 .from('daily_production')
                 .insert({ 
@@ -1231,15 +1232,17 @@
                 }
             }
             
+            const displayQty = qty > 0 ? qty : '';
+
             html += `
                 <div class="${cardClass}" id="mobile-part-${part.id}">
                     <div class="mobile-part-name">${displayName}${badge}</div>
                     <div class="mobile-input-row">
                         <input type="text" inputmode="numeric" pattern="[0-9]*" 
                                id="mobile-input-${part.id}"
-                               value="${qty}" min="0" 
-                               oninput="mobileInputChanged(${part.id}, '${today}', this.value)"
-                               onfocus="this.select()">
+                               value="${displayQty}" 
+                               placeholder="0"
+                               oninput="mobileInputChanged(${part.id}, '${today}', this.value)">
                     </div>
                 </div>
             `;
@@ -1403,7 +1406,11 @@
         if (e.key === 'Enter') confirmDeletePart();
     });
 
+    // === ИСПРАВЛЕНИЕ: ИГНОРИРУЕМ ИЗМЕНЕНИЕ ВЫСОТЫ (КЛАВИАТУРУ) ===
     window.addEventListener('resize', () => {
+        if (window.innerWidth === lastWindowWidth) return;
+        lastWindowWidth = window.innerWidth;
+
         if (currentUser) {
             if (currentRole === 'operator' && window.innerWidth <= 768) {
                 document.body.classList.add('operator-mobile');

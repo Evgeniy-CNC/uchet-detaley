@@ -18,17 +18,6 @@
         h1 { text-align: center; color: #2c3e50; }
         h2 { color: #2c3e50; margin-top: 30px; }
 
-        /* Убираем стрелочки у number input */
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-            appearance: textfield;
-        }
-
         #loginScreen {
             display: flex;
             justify-content: center;
@@ -463,7 +452,7 @@
             <div><label>Месяц: </label><select id="monthPicker"></select></div>
             <div class="add-part-form">
                 <input type="text" id="newPartName" placeholder="Название детали">
-                <input type="number" id="newPartPlan" placeholder="План (шт)" min="0" value="0">
+                <input type="text" id="newPartPlan" placeholder="План (шт)" inputmode="numeric" pattern="[0-9]*" value="0">
                 <button onclick="addPart()">+ Добавить деталь</button>
             </div>
         </div>
@@ -1092,7 +1081,8 @@
             bodyHTML += `<td class="name-cell" ${canEditName}>${displayName}${badge}</td>`;
             
             const planDisabled = (currentRole !== 'admin') ? 'disabled' : '';
-            bodyHTML += `<td class="summary-cell"><input type="number" inputmode="decimal" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onmousedown="this.select()" onfocus="this.select()"></td>`;
+            // ЗАМЕНА: type="text" вместо number
+            bodyHTML += `<td class="summary-cell"><input type="text" inputmode="numeric" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onmousedown="this.select()" onfocus="this.select()"></td>`;
             
             if (currentRole !== 'operator') {
                 bodyHTML += `<td class="summary-cell">${madePrevMonth}</td>`;
@@ -1117,7 +1107,8 @@
                 const disabled = !canEdit ? 'disabled' : '';
                 const onchange = canEdit ? `onchange="updateDaily(${part.id}, '${dateStr}', this.value)"` : '';
                 
-                bodyHTML += `<td class="${cls}"><input type="number" inputmode="decimal" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} onmousedown="this.select()" onfocus="this.select()"></td>`;
+                // ЗАМЕНА: type="text" вместо number
+                bodyHTML += `<td class="${cls}"><input type="text" inputmode="numeric" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} onmousedown="this.select()" onfocus="this.select()"></td>`;
             }
             if (currentRole === 'admin') {
                 bodyHTML += `<td><button class="delete-row-btn" onclick="requestDeletePart(${part.id})">✕</button></td>`;
@@ -1217,11 +1208,12 @@
                 }
             }
             
+            // ЗАМЕНА: type="text" вместо number
             html += `
                 <div class="${cardClass}" id="mobile-part-${part.id}">
                     <div class="mobile-part-name">${displayName}${badge}</div>
                     <div class="mobile-input-row">
-                        <input type="number" inputmode="numeric" pattern="[0-9]*" 
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" 
                                id="mobile-input-${part.id}"
                                value="${qty}" min="0" 
                                oninput="mobileInputChanged(${part.id}, '${today}', this.value)"

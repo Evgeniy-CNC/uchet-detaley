@@ -713,7 +713,9 @@
         return true;
     }
 
+    // === ИСПРАВЛЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ ===
     async function saveDailyToDB(partId, dateStr, quantity) {
+        const qty = parseInt(quantity) || 0;
         const existing = await supabase
             .from('daily_production')
             .select('*')
@@ -724,19 +726,32 @@
         let oldVal = null;
         if (existing.data) oldVal = existing.data.quantity;
 
-        if (quantity === 0) {
-            await supabase.from('daily_production').delete().eq('part_id', partId).eq('date', dateStr);
+        let saveError = null;
+        
+        if (qty === 0) {
+            const { error } = await supabase.from('daily_production').delete().eq('part_id', partId).eq('date', dateStr);
+            saveError = error;
         } else {
-            const record = { part_id: partId, date: dateStr, quantity: quantity, updated_at: new Date().toISOString() };
+            const record = { part_id: partId, date: dateStr, quantity: qty, updated_at: new Date().toISOString() };
             if (existing.data) {
-                record.id = existing.data.id;
-                await supabase.from('daily_production').upsert(record);
+                // Используем update вместо upsert для 100% надежности
+                const { error } = await supabase.from('daily_production')
+                    .update(record)
+                    .eq('id', existing.data.id);
+                saveError = error;
             } else {
-                await supabase.from('daily_production').insert(record);
+                const { error } = await supabase.from('daily_production').insert(record);
+                saveError = error;
             }
         }
+        
+        if (saveError) {
+            console.error('❌ Ошибка сохранения:', saveError);
+            alert('Ошибка сохранения: ' + saveError.message);
+        }
+        
         await logAudit('update_quantity', 'daily_production', partId, 
-            {date: dateStr, quantity: oldVal}, {date: dateStr, quantity: quantity});
+            {date: dateStr, quantity: oldVal}, {date: dateStr, quantity: qty});
     }
 
     async function logAudit(action, tableName, recordId, oldValue, newValue) {
@@ -1104,8 +1119,9 @@
                 const canEdit = (currentRole === 'admin' || currentRole === 'operator');
                 const disabled = !canEdit ? 'disabled' : '';
                 const onchange = canEdit ? `onchange="updateDaily(${part.id}, '${dateStr}', this.value)"` : '';
+                const onblur = canEdit ? `onblur="updateDaily(${part.id}, '${dateStr}', this.value)"` : '';
                 
-                bodyHTML += `<td class="${cls}"><input type="text" inputmode="numeric" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} onclick="this.select()" onfocus="this.select()"></td>`;
+                bodyHTML += `<td class="${cls}"><input type="text" inputmode="numeric" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} ${onblur} onclick="this.select()" onfocus="this.select()"></td>`;
             }
             if (currentRole === 'admin') {
                 bodyHTML += `<td><button class="delete-row-btn" onclick="requestDeletePart(${part.id})">✕</button></td>`;

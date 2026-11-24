@@ -223,7 +223,17 @@
         }
         .trim-btn:hover { background: #d35400; }
         .add-part-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .add-part-form input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .add-part-form input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .blank-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+        .blank-toggle input { width: 18px; height: 18px; cursor: pointer; }
         .stats {
             background: #fff;
             padding: 15px;
@@ -272,44 +282,6 @@
         }
         .users-table th { background: #34495e; color: white; }
 
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            min-width: 350px;
-            max-width: 500px;
-            text-align: center;
-        }
-        .modal h3 { margin: 0 0 20px 0; color: #2c3e50; }
-        .modal input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        .modal input:focus { outline: none; border-color: #3498db; }
-        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
-        .modal-buttons button {
-            padding: 10px 20px; border: none; border-radius: 6px;
-            cursor: pointer; font-size: 14px; font-weight: bold;
-        }
-        .modal-btn-confirm { background: #27ae60; color: white; }
-        .modal-btn-cancel { background: #95a5a6; color: white; }
-        .modal-error { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
-
         .audit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .audit-table th, .audit-table td {
             padding: 8px;
@@ -321,9 +293,9 @@
 
         .loading { text-align: center; padding: 40px; color: #7f8c8d; font-size: 18px; }
 
-        tr.blank-row td { border-bottom: 3px solid #34495e !important; }
-        tr.blank-row td.name-cell { border-bottom: 3px solid #34495e !important; }
+        tr.blank-row td { border-bottom: 1px solid #ddd; }
         tr.main-row td { border-bottom: 1px solid #ddd; }
+        tr.group-end td { border-bottom: 3px solid #34495e !important; }
 
         .blank-prefix {
             font-style: italic !important;
@@ -331,7 +303,6 @@
             color: #555 !important;
         }
 
-        /* Мобильный режим */
         #mobileView { display: none; }
         #desktopTable { display: block; }
 
@@ -365,19 +336,11 @@
             padding: 12px;
             margin-bottom: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-left: 4px solid #3498db;
+            border-left: 6px solid #3498db;
             transition: border-color 0.3s;
         }
-        #mobileView .mobile-part-card.blank-card {
-            border-left-color: #95a5a6;
-            background: #f8f9fa;
-        }
-        #mobileView .mobile-part-card.saving {
-            border-left-color: #f39c12 !important;
-        }
-        #mobileView .mobile-part-card.saved {
-            border-left-color: #27ae60 !important;
-        }
+        #mobileView .mobile-part-card.saving { border-left-color: #f39c12 !important; }
+        #mobileView .mobile-part-card.saved { border-left-color: #27ae60 !important; }
         #mobileView .mobile-part-name {
             font-weight: 600;
             font-size: 14px;
@@ -388,10 +351,7 @@
             -webkit-user-select: none;
             -webkit-touch-callout: none;
         }
-        #mobileView .mobile-input-row {
-            display: flex;
-            align-items: center;
-        }
+        #mobileView .mobile-input-row { display: flex; align-items: center; }
         #mobileView .mobile-input-row input {
             width: 100%;
             padding: 12px;
@@ -401,13 +361,8 @@
             text-align: center;
             font-weight: bold;
         }
-        #mobileView .mobile-input-row input:focus {
-            border-color: #3498db;
-            outline: none;
-        }
-        #mobileView .mobile-input-row input::placeholder {
-            color: #ccc;
-        }
+        #mobileView .mobile-input-row input:focus { border-color: #3498db; outline: none; }
+        #mobileView .mobile-input-row input::placeholder { color: #ccc; }
     </style>
 </head>
 <body>
@@ -434,10 +389,10 @@
     <h1>📋 Учет производства деталей</h1>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="showTab('production')">📊 Производство</button>
-        <button class="tab-btn" onclick="showTab('overplan')">📈 Сверх плана</button>
-        <button class="tab-btn" onclick="showTab('users')" id="tabUsers" style="display:none;">👥 Пользователи</button>
-        <button class="tab-btn" onclick="showTab('audit')" id="tabAudit">📜 История</button>
+        <button class="tab-btn active" onclick="showTab('production', this)">📊 Производство</button>
+        <button class="tab-btn" onclick="showTab('overplan', this)">📈 Сверх плана</button>
+        <button class="tab-btn" onclick="showTab('users', this)" id="tabUsers" style="display:none;">👥 Пользователи</button>
+        <button class="tab-btn" onclick="showTab('audit', this)" id="tabAudit">📜 История</button>
     </div>
 
     <div id="tab-production" class="tab-content active">
@@ -455,8 +410,11 @@
             <div><label>Месяц: </label><select id="monthPicker"></select></div>
             <div class="add-part-form">
                 <input type="text" id="newPartName" placeholder="Название детали">
-                <input type="text" id="newPartPlan" placeholder="План (шт)" inputmode="numeric" pattern="[0-9]*" value="0">
-                <button onclick="addPart()">+ Добавить деталь</button>
+                <input type="text" id="newPartPlan" placeholder="План (шт)" inputmode="numeric" pattern="[0-9]*" value="0" style="width: 90px;">
+                <label class="blank-toggle" title="Создать вместе с заготовкой">
+                    <input type="checkbox" id="createBlank" checked> + заготовка
+                </label>
+                <button onclick="addPart()">Добавить деталь</button>
             </div>
         </div>
 
@@ -531,19 +489,6 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="deleteModal">
-    <div class="modal">
-        <h3>🔒 Введите пароль для удаления</h3>
-        <p id="deleteModalPartName" style="color: #555; margin-bottom: 15px;"></p>
-        <input type="password" id="deletePasswordInput" placeholder="Пароль администратора">
-        <div class="modal-buttons">
-            <button class="modal-btn-confirm" onclick="confirmDeletePart()">Удалить</button>
-            <button class="modal-btn-cancel" onclick="closeModal('deleteModal')">Отмена</button>
-        </div>
-        <div class="modal-error" id="deleteModalError">❌ Неверный пароль!</div>
-    </div>
-</div>
-
 <script>
     const SUPABASE_URL = 'https://irbbfhxfgsbqkwbyaouv.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_YQxlezchyDz6WF-fX69DBQ_NRPzezUj';
@@ -556,11 +501,25 @@
     let dailyData = {};
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth() + 1;
-    let pendingDeleteId = null;
+
     let mobileDebounceTimers = {};
     let lastWindowWidth = window.innerWidth;
 
+    const GROUP_COLORS = [
+        '#e3f2fd', '#e8f5e9', '#fff3e0', '#fce4ec',
+        '#f3e5f5', '#e0f7fa', '#fffde7', '#efebe9',
+        '#e1f5fe', '#f1f8e9', '#fbe9e7', '#ede7f6'
+    ];
+
     const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+    // Группировка по имени до первого " - " (тире с пробелами)
+    function getBaseName(name) {
+        if (name.startsWith('Заготовка для ')) name = name.substring('Заготовка для '.length);
+        const idx = name.indexOf(' - ');
+        if (idx !== -1) return name.substring(0, idx);
+        return name;
+    }
 
     async function doLogin() {
         const email = document.getElementById('loginEmail').value.trim();
@@ -651,24 +610,28 @@
     async function loadData() {
         const { data: partsData, error: partsError } = await supabase
             .from('parts')
-            .select('*')
-            .order('name');
+            .select('*');
         if (partsError) { console.error(partsError); return; }
         const allParts = partsData || [];
 
-        const mainParts = allParts.filter(p => !p.name.startsWith('Заготовка для '));
-        const blankParts = allParts.filter(p => p.name.startsWith('Заготовка для '));
-        mainParts.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+        const groups = new Map();
+        allParts.forEach(p => {
+            const base = getBaseName(p.name);
+            if (!groups.has(base)) groups.set(base, { blanks: [], mains: [] });
+            const g = groups.get(base);
+            if (p.name.startsWith('Заготовка для ')) g.blanks.push(p);
+            else g.mains.push(p);
+        });
 
         const sortedParts = [];
-        mainParts.forEach(main => {
-            sortedParts.push(main);
-            const blankName = `Заготовка для ${main.name}`;
-            const blank = blankParts.find(b => b.name === blankName);
-            if (blank) sortedParts.push(blank);
-        });
-        blankParts.forEach(blank => {
-            if (!sortedParts.find(p => p.id === blank.id)) sortedParts.push(blank);
+        const baseNames = [...groups.keys()].sort((a, b) => a.localeCompare(b, 'ru'));
+        baseNames.forEach((base, i) => {
+            const g = groups.get(base);
+            const color = GROUP_COLORS[i % GROUP_COLORS.length];
+            g.blanks.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+            g.mains.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+            g.blanks.forEach(p => { p._groupColor = color; sortedParts.push(p); });
+            g.mains.forEach(p => { p._groupColor = color; sortedParts.push(p); });
         });
         parts = sortedParts;
 
@@ -713,8 +676,16 @@
         const { error } = await supabase.from('parts').delete().eq('id', partId);
         if (error) { alert('Ошибка удаления: ' + error.message); return false; }
         await supabase.from('daily_production').delete().eq('part_id', partId);
-        await logAudit('delete', 'parts', partId, {id: partId}, null);
+        await logAudit('delete', 'parts', partId, {id: partId, name: partName}, null);
         return true;
+    }
+
+    async function deletePart(id) {
+        const part = parts.find(p => p.id === id);
+        if (!part) return;
+        if (!confirm(`Удалить деталь «${part.name}» и все её записи производства?`)) return;
+        await deletePartFromDB(id);
+        await loadData();
     }
 
     async function saveDailyToDB(partId, dateStr, quantity) {
@@ -779,6 +750,7 @@
     async function addPart() {
         const name = document.getElementById('newPartName').value.trim();
         const plan = parseInt(document.getElementById('newPartPlan').value) || 0;
+        const withBlank = document.getElementById('createBlank').checked;
         if (!name) { alert('Введите название детали'); return; }
 
         const now = new Date().toISOString();
@@ -789,13 +761,15 @@
         if (err1) { alert('Ошибка: ' + err1.message); return; }
         await logAudit('insert', 'parts', part1.id, null, part1);
 
-        const blankName = `Заготовка для ${name}`;
-        const { data: part2, error: err2 } = await supabase
-            .from('parts')
-            .insert({ name: blankName, plan: plan, created_at: now })
-            .select().single();
-        if (err2) { console.error('Ошибка создания заготовки:', err2); } 
-        else { await logAudit('insert', 'parts', part2.id, null, part2); }
+        if (withBlank) {
+            const blankName = `Заготовка для ${name}`;
+            const { data: part2, error: err2 } = await supabase
+                .from('parts')
+                .insert({ name: blankName, plan: plan, created_at: now })
+                .select().single();
+            if (err2) { console.error('Ошибка создания заготовки:', err2); } 
+            else { await logAudit('insert', 'parts', part2.id, null, part2); }
+        }
 
         document.getElementById('newPartName').value = '';
         document.getElementById('newPartPlan').value = '0';
@@ -843,43 +817,6 @@
             }
         }
         await logAudit('update_name', 'parts', partId, {name: oldName}, {name: newName});
-        await loadData();
-    }
-
-    function requestDeletePart(id) {
-        const part = parts.find(p => p.id === id);
-        if (!part) return;
-        pendingDeleteId = id;
-        document.getElementById('deleteModalPartName').textContent = `Деталь: "${part.name}"`;
-        document.getElementById('deletePasswordInput').value = '';
-        document.getElementById('deleteModalError').style.display = 'none';
-        document.getElementById('deleteModal').classList.add('active');
-        setTimeout(() => document.getElementById('deletePasswordInput').focus(), 100);
-    }
-
-    async function confirmDeletePart() {
-        const password = document.getElementById('deletePasswordInput').value;
-        const errorEl = document.getElementById('deleteModalError');
-        if (!password) {
-            errorEl.textContent = '❌ Введите пароль!';
-            errorEl.style.display = 'block';
-            return;
-        }
-        if (currentRole !== 'admin') {
-            errorEl.textContent = '❌ Только администратор может удалять!';
-            errorEl.style.display = 'block';
-            return;
-        }
-        const { error } = await supabase.auth.signInWithPassword({ 
-            email: currentUser.email, password: password 
-        });
-        if (error) {
-            errorEl.textContent = '❌ Неверный пароль!';
-            errorEl.style.display = 'block';
-            return;
-        }
-        await deletePartFromDB(pendingDeleteId);
-        closeModal('deleteModal');
         await loadData();
     }
 
@@ -1069,7 +1006,7 @@
         let bodyHTML = '';
         let activeCount = 0, monthMade = 0, monthRemaining = 0, monthOverplan = 0;
 
-        visibleParts.forEach(({ part, totalMade, isCompleted, createdAt, lastActiveMonth }) => {
+        visibleParts.forEach(({ part, totalMade, isCompleted, createdAt, lastActiveMonth }, idx) => {
             const madePrevMonth = getMadeInMonth(part.id, prevMonthStr);
             const madeThisMonth = getMadeInMonth(part.id, currentMonthStr);
             const left = Math.max(0, part.plan - totalMade);
@@ -1097,24 +1034,30 @@
             if (isFuture) badge += '<span class="badge badge-future">ещё не начата</span>';
 
             const rowTypeClass = isBlank ? 'blank-row' : 'main-row';
-            const combinedRowClass = `${rowClass} ${rowTypeClass}`.trim();
+            const nextPart = visibleParts[idx + 1];
+            const isGroupEnd = !nextPart || getBaseName(nextPart.part.name) !== getBaseName(part.name);
+            const groupEndClass = isGroupEnd ? 'group-end' : '';
+            const combinedRowClass = `${rowClass} ${rowTypeClass} ${groupEndClass}`.trim();
+
+            const groupColor = part._groupColor || '';
+            const bgColor = isCompleted ? '' : `background-color:${groupColor};`;
 
             bodyHTML += `<tr class="${combinedRowClass}">`;
             
             const canEditName = currentRole === 'admin' ? `ondblclick="editPartName(${part.id}, this)" title="Двойной клик для редактирования"` : '';
             const displayName = formatPartName(part.name);
-            bodyHTML += `<td class="name-cell" ${canEditName}>${displayName}${badge}</td>`;
+            bodyHTML += `<td class="name-cell" style="${bgColor}" ${canEditName}>${displayName}${badge}</td>`;
             
             const planDisabled = (currentRole !== 'admin') ? 'disabled' : '';
-            bodyHTML += `<td class="summary-cell"><input type="text" inputmode="numeric" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onclick="this.select()" onfocus="this.select()"></td>`;
+            bodyHTML += `<td class="summary-cell" style="${bgColor}"><input type="text" inputmode="numeric" pattern="[0-9]*" class="plan-input" value="${part.plan}" min="0" ${planDisabled} onchange="updatePlan(${part.id}, this.value)" onclick="this.select()" onfocus="this.select()"></td>`;
             
             if (currentRole !== 'operator') {
-                bodyHTML += `<td class="summary-cell">${madePrevMonth}</td>`;
-                bodyHTML += `<td class="summary-cell" style="color: ${left > 0 ? '#e74c3c' : '#27ae60'}">${left}</td>`;
-                bodyHTML += `<td class="summary-cell">${formatDateFull(part.created_at)}</td>`;
-                bodyHTML += `<td class="summary-cell">${completedAt ? formatDateFull(completedAt) : '—'}</td>`;
+                bodyHTML += `<td class="summary-cell" style="${bgColor}">${madePrevMonth}</td>`;
+                bodyHTML += `<td class="summary-cell" style="${bgColor}color: ${left > 0 ? '#e74c3c' : '#27ae60'};">${left}</td>`;
+                bodyHTML += `<td class="summary-cell" style="${bgColor}">${formatDateFull(part.created_at)}</td>`;
+                bodyHTML += `<td class="summary-cell" style="${bgColor}">${completedAt ? formatDateFull(completedAt) : '—'}</td>`;
             } else {
-                bodyHTML += `<td class="summary-cell" style="color: ${left > 0 ? '#e74c3c' : '#27ae60'}">${left}</td>`;
+                bodyHTML += `<td class="summary-cell" style="${bgColor}color: ${left > 0 ? '#e74c3c' : '#27ae60'};">${left}</td>`;
             }
 
             for (let d = 1; d <= daysInMonth; d++) {
@@ -1132,10 +1075,10 @@
                 const onchange = canEdit ? `onchange="updateDaily(${part.id}, '${dateStr}', this.value)"` : '';
                 const onblur = canEdit ? `onblur="updateDaily(${part.id}, '${dateStr}', this.value)"` : '';
                 
-                bodyHTML += `<td class="${cls}"><input type="text" inputmode="numeric" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} ${onblur} onclick="this.select()" onfocus="this.select()"></td>`;
+                bodyHTML += `<td class="${cls}" style="${bgColor}"><input type="text" inputmode="numeric" pattern="[0-9]*" value="${qty}" min="0" ${disabled} ${onchange} ${onblur} onclick="this.select()" onfocus="this.select()"></td>`;
             }
             if (currentRole === 'admin') {
-                bodyHTML += `<td><button class="delete-row-btn" onclick="requestDeletePart(${part.id})">✕</button></td>`;
+                bodyHTML += `<td style="${bgColor}"><button class="delete-row-btn" onclick="deletePart(${part.id})">✕</button></td>`;
             }
             bodyHTML += '</tr>';
         });
@@ -1219,9 +1162,8 @@
         todayParts.forEach(part => {
             const qty = dailyData[today] && dailyData[today][part.id] ? dailyData[today][part.id] : 0;
             const totalMade = getTotalMade(part.id);
-            const isBlank = part.name.startsWith('Заготовка для ');
-            const cardClass = isBlank ? 'mobile-part-card blank-card' : 'mobile-part-card';
             const displayName = formatPartName(part.name);
+            const groupColor = part._groupColor || '#3498db';
             
             let badge = '';
             if (part.plan > 0) {
@@ -1235,7 +1177,7 @@
             const displayQty = qty > 0 ? qty : '';
 
             html += `
-                <div class="${cardClass}" id="mobile-part-${part.id}">
+                <div class="mobile-part-card" id="mobile-part-${part.id}" style="border-left-color:${groupColor};">
                     <div class="mobile-part-name">${displayName}${badge}</div>
                     <div class="mobile-input-row">
                         <input type="text" inputmode="numeric" pattern="[0-9]*" 
@@ -1312,25 +1254,25 @@
         const formatValue = (val, tableName) => {
             if (!val) return '—';
             if (typeof val === 'object') {
-                const parts = [];
-                if (val.name) parts.push(`📦 ${val.name}`);
-                if (val.plan !== undefined) parts.push(`📋 План: ${val.plan} шт.`);
+                const partsArr = [];
+                if (val.name) partsArr.push(`📦 ${val.name}`);
+                if (val.plan !== undefined) partsArr.push(`📋 План: ${val.plan} шт.`);
                 if (val.quantity !== undefined && val.date) {
                     const dateParts = val.date.split('-');
-                    parts.push(`📅 ${dateParts[2]}.${dateParts[1]}.${dateParts[0]}: ${val.quantity} шт.`);
+                    partsArr.push(`📅 ${dateParts[2]}.${dateParts[1]}.${dateParts[0]}: ${val.quantity} шт.`);
                 } else if (val.quantity !== undefined) {
-                    parts.push(`Количество: ${val.quantity} шт.`);
+                    partsArr.push(`Количество: ${val.quantity} шт.`);
                 } else if (val.date) {
                     const dateParts = val.date.split('-');
-                    parts.push(`📅 ${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`);
+                    partsArr.push(`📅 ${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`);
                 }
-                if (val.email) parts.push(`📧 ${val.email}`);
+                if (val.email) partsArr.push(`📧 ${val.email}`);
                 if (val.role) {
                     const roleLabels = { 'admin': 'Администратор', 'manager': 'Начальник', 'operator': 'Оператор' };
-                    parts.push(`🎭 ${roleLabels[val.role] || val.role}`);
+                    partsArr.push(`🎭 ${roleLabels[val.role] || val.role}`);
                 }
-                if (val.full_name) parts.push(`👤 ${val.full_name}`);
-                return parts.length > 0 ? parts.join('<br>') : JSON.stringify(val);
+                if (val.full_name) partsArr.push(`👤 ${val.full_name}`);
+                return partsArr.length > 0 ? partsArr.join('<br>') : JSON.stringify(val);
             }
             return String(val);
         };
@@ -1380,33 +1322,19 @@
         tbody.innerHTML = html || '<tr><td colspan="7">Нет записей</td></tr>';
     }
 
-    function showTab(name) {
+    function showTab(name, btn) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-' + name).classList.add('active');
-        event.target.classList.add('active');
+        if (btn) btn.classList.add('active');
         if (name === 'users') renderUsers();
         if (name === 'audit') renderAudit();
     }
 
-    function closeModal(id) {
-        document.getElementById(id).classList.remove('active');
-    }
-
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) overlay.classList.remove('active');
-        });
-    });
-
     document.getElementById('loginPassword').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') doLogin();
     });
-    document.getElementById('deletePasswordInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') confirmDeletePart();
-    });
 
-    // === ИСПРАВЛЕНИЕ: ИГНОРИРУЕМ ИЗМЕНЕНИЕ ВЫСОТЫ (КЛАВИАТУРУ) ===
     window.addEventListener('resize', () => {
         if (window.innerWidth === lastWindowWidth) return;
         lastWindowWidth = window.innerWidth;

@@ -713,45 +713,55 @@
         return true;
     }
 
-    // === ИСПРАВЛЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ ===
+    // === ИСПРАВЛЕННАЯ ФУНКЦИЯ СОХРАНЕНИЯ (ВАШ ВАРИАНТ) ===
     async function saveDailyToDB(partId, dateStr, quantity) {
         const qty = parseInt(quantity) || 0;
-        const existing = await supabase
+        
+        const { data: existing, error: fetchError } = await supabase
             .from('daily_production')
             .select('*')
             .eq('part_id', partId)
             .eq('date', dateStr)
-            .single();
+            .maybeSingle();
 
-        let oldVal = null;
-        if (existing.data) oldVal = existing.data.quantity;
+        if (fetchError) {
+            console.error('Ошибка поиска записи:', fetchError);
+            alert('Ошибка базы данных: ' + fetchError.message);
+            return;
+        }
 
-        let saveError = null;
-        
+        let oldVal = existing ? existing.quantity : null;
+
         if (qty === 0) {
-            const { error } = await supabase.from('daily_production').delete().eq('part_id', partId).eq('date', dateStr);
-            saveError = error;
-        } else {
-            const record = { part_id: partId, date: dateStr, quantity: qty, updated_at: new Date().toISOString() };
-            if (existing.data) {
-                // Используем update вместо upsert для 100% надежности
-                const { error } = await supabase.from('daily_production')
-                    .update(record)
-                    .eq('id', existing.data.id);
-                saveError = error;
-            } else {
-                const { error } = await supabase.from('daily_production').insert(record);
-                saveError = error;
+            if (existing) {
+                const { error } = await supabase
+                    .from('daily_production')
+                    .delete()
+                    .eq('id', existing.id);
+                if (error) { alert('Ошибка удаления: ' + error.message); return; }
             }
+        } else if (existing) {
+            // Запись уже есть — делаем прямой UPDATE по её id
+            const { error } = await supabase
+                .from('daily_production')
+                .update({ quantity: qty, updated_at: new Date().toISOString() })
+                .eq('id', existing.id);
+            if (error) { alert('Ошибка обновления: ' + error.message); return; }
+        } else {
+            // Записи нет — делаем INSERT
+            const { error } = await supabase
+                .from('daily_production')
+                .insert({ 
+                    part_id: partId, 
+                    date: dateStr, 
+                    quantity: qty, 
+                    updated_at: new Date().toISOString() 
+                });
+            if (error) { alert('Ошибка добавления: ' + error.message); return; }
         }
-        
-        if (saveError) {
-            console.error('❌ Ошибка сохранения:', saveError);
-            alert('Ошибка сохранения: ' + saveError.message);
-        }
-        
+
         await logAudit('update_quantity', 'daily_production', partId, 
-            {date: dateStr, quantity: oldVal}, {date: dateStr, quantity: qty});
+            { date: dateStr, quantity: oldVal }, { date: dateStr, quantity: qty });
     }
 
     async function logAudit(action, tableName, recordId, oldValue, newValue) {
